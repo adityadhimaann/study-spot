@@ -15,6 +15,7 @@ import { Route as BookingRouteImport } from './routes/booking'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
+import { Route as AppFloorMapRouteImport } from './routes/_app.floor-map'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppBookingsRouteImport } from './routes/_app.bookings'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
@@ -48,6 +49,11 @@ const AppProfileRoute = AppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFloorMapRoute = AppFloorMapRouteImport.update({
+  id: '/floor-map',
+  path: '/floor-map',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRoute
   '/bookings': typeof AppBookingsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRoute
   '/bookings': typeof AppBookingsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRoute
   '/_app/bookings': typeof AppBookingsRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/floor-map': typeof AppFloorMapRoute
   '/_app/profile': typeof AppProfileRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bookings'
     | '/dashboard'
+    | '/floor-map'
     | '/profile'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bookings'
     | '/dashboard'
+    | '/floor-map'
     | '/profile'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/bookings'
     | '/_app/dashboard'
+    | '/_app/floor-map'
     | '/_app/profile'
   fileRoutesById: FileRoutesById
 }
@@ -182,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/floor-map': {
+      id: '/_app/floor-map'
+      path: '/floor-map'
+      fullPath: '/floor-map'
+      preLoaderRoute: typeof AppFloorMapRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -210,6 +229,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppBookingsRoute: typeof AppBookingsRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppFloorMapRoute: typeof AppFloorMapRoute
   AppProfileRoute: typeof AppProfileRoute
 }
 
@@ -217,6 +237,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppBookingsRoute: AppBookingsRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppFloorMapRoute: AppFloorMapRoute,
   AppProfileRoute: AppProfileRoute,
 }
 
