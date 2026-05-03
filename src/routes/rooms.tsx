@@ -2,9 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Volume2, Filter } from "lucide-react";
+import { Users, Volume2, Filter, Search, Wifi, Star, MapPin } from "lucide-react";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { LandingNav } from "@/components/LandingNav";
 
 export const Route = createFileRoute("/rooms")({
   component: RoomsPage,
@@ -17,24 +19,35 @@ export const Route = createFileRoute("/rooms")({
 });
 
 type RoomType = "all" | "quiet" | "group";
+type Status = "available" | "almost-full" | "booked";
 
 const rooms = [
-  { id: 1, name: "Quiet Zone A1", type: "quiet" as const, capacity: 1, available: true, floor: "1st Floor" },
-  { id: 2, name: "Quiet Zone A2", type: "quiet" as const, capacity: 1, available: true, floor: "1st Floor" },
-  { id: 3, name: "Quiet Zone A3", type: "quiet" as const, capacity: 1, available: false, floor: "1st Floor" },
-  { id: 4, name: "Group Room B1", type: "group" as const, capacity: 6, available: true, floor: "2nd Floor" },
-  { id: 5, name: "Group Room B2", type: "group" as const, capacity: 8, available: false, floor: "2nd Floor" },
-  { id: 6, name: "Group Room B3", type: "group" as const, capacity: 4, available: true, floor: "2nd Floor" },
-  { id: 7, name: "Quiet Zone C1", type: "quiet" as const, capacity: 1, available: true, floor: "3rd Floor" },
-  { id: 8, name: "Group Room C2", type: "group" as const, capacity: 10, available: true, floor: "3rd Floor" },
+  { id: 1, name: "Quiet Zone A1", type: "quiet" as const, capacity: 1, status: "available" as Status, floor: "1st Floor", amenities: ["Wi-Fi", "Power"], rating: 4.8 },
+  { id: 2, name: "Quiet Zone A2", type: "quiet" as const, capacity: 1, status: "available" as Status, floor: "1st Floor", amenities: ["Wi-Fi", "Power", "Lamp"], rating: 4.5 },
+  { id: 3, name: "Quiet Zone A3", type: "quiet" as const, capacity: 1, status: "booked" as Status, floor: "1st Floor", amenities: ["Wi-Fi"], rating: 4.9 },
+  { id: 4, name: "Group Room B1", type: "group" as const, capacity: 6, status: "available" as Status, floor: "2nd Floor", amenities: ["Wi-Fi", "Whiteboard", "TV"], rating: 4.7 },
+  { id: 5, name: "Group Room B2", type: "group" as const, capacity: 8, status: "almost-full" as Status, floor: "2nd Floor", amenities: ["Wi-Fi", "Whiteboard"], rating: 4.6 },
+  { id: 6, name: "Group Room B3", type: "group" as const, capacity: 4, status: "available" as Status, floor: "2nd Floor", amenities: ["Wi-Fi", "Power"], rating: 4.3 },
+  { id: 7, name: "Quiet Zone C1", type: "quiet" as const, capacity: 1, status: "available" as Status, floor: "3rd Floor", amenities: ["Wi-Fi", "Power"], rating: 4.4 },
+  { id: 8, name: "Group Room C2", type: "group" as const, capacity: 10, status: "available" as Status, floor: "3rd Floor", amenities: ["Wi-Fi", "Whiteboard", "TV", "Projector"], rating: 4.9 },
 ];
+
+const statusConfig: Record<Status, { badge: "success" | "warning" | "destructive"; label: string; dotClass: string }> = {
+  available: { badge: "success", label: "Available", dotClass: "bg-success animate-pulse" },
+  "almost-full": { badge: "warning", label: "Almost Full", dotClass: "bg-warning animate-pulse" },
+  booked: { badge: "destructive", label: "Booked", dotClass: "bg-destructive" },
+};
 
 function RoomsPage() {
   const [filter, setFilter] = useState<RoomType>("all");
-  const filtered = filter === "all" ? rooms : rooms.filter((r) => r.type === filter);
+  const [search, setSearch] = useState("");
+  const filtered = rooms
+    .filter((r) => filter === "all" || r.type === filter)
+    .filter((r) => r.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-background">
+      <LandingNav />
       <div className="mx-auto max-w-7xl px-6 py-10">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -42,65 +55,94 @@ function RoomsPage() {
             <p className="mt-1 text-muted-foreground">Browse and book available study spaces.</p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search rooms..."
+                className="h-9 w-48 rounded-lg border bg-muted/40 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
             <Filter className="h-4 w-4 text-muted-foreground" />
             {(["all", "quiet", "group"] as RoomType[]).map((t) => (
-              <Button
+              <button
                 key={t}
-                variant={filter === t ? "default" : "outline"}
-                size="sm"
                 onClick={() => setFilter(t)}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
+                  filter === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-accent"
+                )}
               >
-                {t === "all" ? "All" : t === "quiet" ? "Quiet Zones" : "Group Rooms"}
-              </Button>
+                {t === "all" ? "All" : t === "quiet" ? "Quiet" : "Group"}
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((room, i) => (
-            <motion.div
-              key={room.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.05 }}
-            >
-              <Card className="border-border/50 transition-all duration-200 hover:shadow-lg">
-                <CardContent className="p-5">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                      {room.type === "quiet" ? (
-                        <Volume2 className="h-5 w-5 text-primary" />
-                      ) : (
-                        <Users className="h-5 w-5 text-primary" />
-                      )}
-                    </div>
-                    <Badge variant={room.available ? "success" : "secondary"}>
-                      {room.available ? "Available" : "Booked"}
-                    </Badge>
-                  </div>
-                  <h3 className="text-base font-semibold text-card-foreground">{room.name}</h3>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{room.floor}</p>
-                  <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                    <Users className="h-3.5 w-3.5" />
-                    <span>Capacity: {room.capacity}</span>
-                  </div>
-                  <Button
-                    className="mt-4 w-full"
-                    size="sm"
-                    disabled={!room.available}
-                    asChild={room.available}
+        {filtered.length === 0 ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <Search className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">No rooms found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filter criteria.</p>
+          </motion.div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <AnimatePresence>
+              {filtered.map((room, i) => {
+                const status = statusConfig[room.status];
+                return (
+                  <motion.div
+                    key={room.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3, delay: i * 0.05 }}
+                    layout
                   >
-                    {room.available ? (
-                      <Link to="/booking" search={{ roomId: room.id }}>Book Now</Link>
-                    ) : (
-                      "Unavailable"
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+                    <Card className="group border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                      <CardContent className="p-5">
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 transition-transform group-hover:scale-110">
+                            {room.type === "quiet" ? <Volume2 className="h-5 w-5 text-primary" /> : <Users className="h-5 w-5 text-primary" />}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={cn("h-2 w-2 rounded-full", status.dotClass)} />
+                            <Badge variant={status.badge}>{status.label}</Badge>
+                          </div>
+                        </div>
+                        <h3 className="text-base font-semibold text-card-foreground">{room.name}</h3>
+                        <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" />{room.floor}
+                          <span>·</span>
+                          <Users className="h-3 w-3" />Cap: {room.capacity}
+                        </div>
+                        <div className="mt-2 flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-warning text-warning" />
+                          <span className="text-xs font-medium text-muted-foreground">{room.rating}</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {room.amenities.map((a) => (
+                            <span key={a} className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                              {a === "Wi-Fi" && <Wifi className="h-2.5 w-2.5" />}{a}
+                            </span>
+                          ))}
+                        </div>
+                        <Button className="mt-4 w-full" size="sm" disabled={room.status === "booked"} asChild={room.status !== "booked"}>
+                          {room.status !== "booked" ? (
+                            <Link to="/booking" search={{ roomId: room.id }}>Book Now</Link>
+                          ) : "Unavailable"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
     </div>
   );
