@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardTopbar } from "@/components/DashboardTopbar";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
       <div className="flex flex-1 flex-col">
         <DashboardTopbar />
@@ -16,6 +17,7 @@ function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <Toaster position="bottom-right" />
     </div>
   );
 }

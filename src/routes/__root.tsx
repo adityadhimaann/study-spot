@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { ThemeProvider } from "@/hooks/useTheme";
 
 import appCss from "../styles.css?url";
 
@@ -31,18 +32,11 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "StudySpace — Library Quiet Zone & Study Room Booking" },
       { name: "description", content: "Book quiet zones and group study rooms in your library. Simple, fast, and efficient." },
-      { name: "author", content: "StudySpace" },
-      { property: "og:title", content: "StudySpace — Library Booking System" },
-      { property: "og:description", content: "Book quiet zones and group study rooms in your library." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -65,5 +59,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <ThemeProvider>
+      <Outlet />
+    </ThemeProvider>
+  );
 }
