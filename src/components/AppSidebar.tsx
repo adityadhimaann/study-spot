@@ -1,14 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, BookMarked, User, BookOpen, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, CalendarDays, BookMarked, User, BookOpen, LogOut, ChevronLeft, ChevronRight, Map, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Book Room", to: "/rooms", icon: CalendarDays },
+  { label: "Floor Map", to: "/floor-map", icon: Map },
   { label: "My Bookings", to: "/bookings", icon: BookMarked },
   { label: "Profile", to: "/profile", icon: User },
+  { label: "Admin", to: "/admin", icon: Shield },
 ];
 
 export function AppSidebar() {
@@ -17,13 +20,16 @@ export function AppSidebar() {
 
   return (
     <aside className={cn(
-      "sticky top-0 flex h-screen flex-col border-r bg-sidebar transition-all duration-300",
+      "sticky top-0 flex h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300",
       collapsed ? "w-[68px]" : "w-60"
     )}>
       <div className="flex h-16 items-center gap-2.5 border-b px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
+        <motion.div
+          whileHover={{ rotate: 10 }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25"
+        >
           <BookOpen className="h-5 w-5 text-primary-foreground" />
-        </div>
+        </motion.div>
         {!collapsed && (
           <span className="font-heading text-lg font-bold text-sidebar-foreground">StudySpace</span>
         )}
@@ -37,22 +43,28 @@ export function AppSidebar() {
               key={item.to}
               to={item.to}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 active
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary shadow-sm"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               )}
             >
-              <item.icon className="h-5 w-5 shrink-0" />
+              <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110", active && "text-primary")} />
               {!collapsed && <span>{item.label}</span>}
+              {active && !collapsed && (
+                <motion.div
+                  layoutId="sidebar-active"
+                  className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
+                />
+              )}
             </Link>
           );
         })}
       </nav>
 
       <div className="space-y-1 border-t p-3">
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground">
-          <LogOut className="h-5 w-5 shrink-0" />
+        <button className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-all hover:bg-destructive/10 hover:text-destructive">
+          <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover:scale-110" />
           {!collapsed && <span>Log out</span>}
         </button>
         <Button
