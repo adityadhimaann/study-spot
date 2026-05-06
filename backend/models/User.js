@@ -33,6 +33,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '1st Year',
   },
+  profilePicture: {
+    type: String,
+    default: '',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

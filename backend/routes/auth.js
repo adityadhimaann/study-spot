@@ -73,10 +73,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    // Check for existing user
-    const user = await User.findOne({ email });
+    // Check for existing user by email or studentId
+    const user = await User.findOne({
+      $or: [{ email: email }, { studentId: email }]
+    });
+    
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials. User not found.' });
     }
 
     // Validate password
@@ -137,6 +140,7 @@ router.put('/profile', auth, async (req, res) => {
     if (department) user.department = department;
     if (year) user.year = year;
     if (studentId) user.studentId = studentId;
+    if (req.body.profilePicture !== undefined) user.profilePicture = req.body.profilePicture;
     
     await user.save();
     
