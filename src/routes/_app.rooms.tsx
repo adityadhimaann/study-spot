@@ -36,7 +36,7 @@ function RoomsPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/rooms")
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/rooms`)
       .then(res => res.json())
       .then(data => { setRooms(data); setIsLoading(false); })
       .catch(err => { console.error(err); setIsLoading(false); });

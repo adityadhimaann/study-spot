@@ -34,7 +34,7 @@ function MyBookingsPage() {
   const [isInviting, setIsInviting] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/bookings/my-bookings", {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/bookings/my-bookings`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
     })
       .then(res => res.json())
@@ -44,7 +44,7 @@ function MyBookingsPage() {
 
   const handleCancel = async (id: string, roomName: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${id}/cancel`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/bookings/${id}/cancel`, {
         method: "PATCH",
         headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
       });

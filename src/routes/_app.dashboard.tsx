@@ -48,13 +48,13 @@ function DashboardPage() {
     const token = localStorage.getItem("token");
 
     // Fetch rooms
-    fetch("${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/rooms")
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/rooms`)
       .then(res => res.json())
       .then(data => setRooms(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     // Fetch user bookings
-    fetch("${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/bookings/my-bookings", {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/bookings/my-bookings`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
