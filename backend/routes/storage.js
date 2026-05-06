@@ -15,31 +15,43 @@ cloudinary.config({
 // Configure Multer Storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'studyspace',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+  params: async (req, file) => {
+    return {
+      folder: 'studyspace',
+      format: 'png', // Force png for profile pics
+      public_id: `user_${req.user}_${Date.now()}`,
+    };
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 
 // Upload single image
 router.post('/upload', auth, upload.single('image'), async (req, res) => {
   try {
+    console.log('Upload attempt for user:', req.user);
+    
     if (!req.file) {
+      console.log('No file received');
       return res.status(400).json({ message: 'No file uploaded' });
     }
+
+    console.log('Successfully uploaded to Cloudinary:', req.file.path);
+    
     res.json({
       url: req.file.path,
       public_id: req.file.filename
     });
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ message: 'Server error during upload' });
+    console.error('Cloudinary Upload Catch:', error);
+    res.status(500).json({ message: 'Server error during upload', error: error.message });
   }
 });
 
-// Get all images (using Cloudinary Search API or similar)
+// Get all images
 router.get('/images', auth, async (req, res) => {
   try {
     const result = await cloudinary.search
