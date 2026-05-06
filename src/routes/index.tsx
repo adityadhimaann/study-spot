@@ -4,8 +4,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@tanstack/react-router";
-import { Shield, Clock, Users, Wifi, CalendarCheck, MapPin, ArrowRight, Sparkles, Star } from "lucide-react";
-import heroImage from "@/assets/hero-illustration.png";
+import { Shield, Clock, Users, Wifi, CalendarCheck, MapPin, ArrowRight, Sparkles, Star, CheckCircle } from "lucide-react";
+import heroImage from "@/assets/hero-illustration.jpg";
 import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/")({
@@ -84,8 +84,41 @@ function LandingPage() {
                 <span>1,200+ students already booking</span>
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.2 }} className="relative">
-              <img src={heroImage} alt="Students studying in a modern library" width={1280} height={800} className="w-full drop-shadow-2xl" />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.92 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              transition={{ duration: 0.7, delay: 0.2 }} 
+              className="relative group"
+            >
+              {/* Glass decorative background */}
+              <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-primary/0 rounded-[3rem] blur-2xl opacity-50 group-hover:opacity-80 transition-opacity" />
+              
+              <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/5 p-1 shadow-2xl backdrop-blur-sm">
+                <img 
+                  src={heroImage} 
+                  alt="Students studying in a modern library" 
+                  width={1280} 
+                  height={800} 
+                  className="w-full h-full object-cover rounded-[2.2rem] mix-blend-multiply dark:brightness-110 dark:contrast-110" 
+                />
+              </div>
+
+              {/* Floating badges for extra 'WOW' factor */}
+              <motion.div 
+                animate={{ y: [0, -10, 0] }} 
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-6 -right-6 rounded-2xl bg-card/90 p-4 shadow-xl border border-border/50 backdrop-blur-md hidden sm:block"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center text-success">
+                    <CheckCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Availability</p>
+                    <p className="text-sm font-bold">12 Rooms Free</p>
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
