@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@tanstack/react-router";
 import { Shield, Clock, Users, Wifi, CalendarCheck, MapPin, ArrowRight, Sparkles, Star } from "lucide-react";
-import heroImage from "@/assets/hero-illustration.jpg";
+import heroImage from "@/assets/hero-illustration.png";
 import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/")({
@@ -85,7 +85,7 @@ function LandingPage() {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.2 }} className="relative">
-              <img src={heroImage} alt="Students studying in a modern library" width={1280} height={800} className="w-full mix-blend-multiply dark:mix-blend-normal" />
+              <img src={heroImage} alt="Students studying in a modern library" width={1280} height={800} className="w-full drop-shadow-2xl" />
             </motion.div>
           </div>
         </div>
