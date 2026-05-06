@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { FloorMap } from "@/components/FloorMap";
 import { AdminStorage } from "@/components/AdminStorage";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {
@@ -77,33 +78,33 @@ function AdminPage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     
-    fetch("http://localhost:5000/api/admin/bookings", {
+    fetch(`${API_URL}/api/admin/bookings`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setBookings(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
 
-    fetch("http://localhost:5000/api/admin/stats", {
+    fetch(`${API_URL}/api/admin/stats`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setStatsData(data))
       .catch(err => console.error(err));
 
-    fetch("http://localhost:5000/api/admin/users", {
+    fetch(`${API_URL}/api/admin/users`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setUsers(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
       
-    fetch("http://localhost:5000/api/rooms")
+    fetch(`${API_URL}/api/rooms`)
       .then(res => res.json())
       .then(data => setRooms(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
 
-    fetch("http://localhost:5000/api/admin/feedback", {
+    fetch(`${API_URL}/api/admin/feedback`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -123,7 +124,7 @@ function AdminPage() {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/bookings/${id}`, {
+      const res = await fetch(`${API_URL}/api/admin/bookings/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -146,7 +147,7 @@ function AdminPage() {
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/admin/rooms", {
+      const res = await fetch(`${API_URL}/api/admin/rooms`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify({ ...newRoom, amenities: newRoom.amenities.split(',').map(s=>s.trim()) })
@@ -164,7 +165,7 @@ function AdminPage() {
 
   const handleDeleteRoom = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/rooms/${id}`, {
+      const res = await fetch(`${API_URL}/api/admin/rooms/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
       });
@@ -178,7 +179,7 @@ function AdminPage() {
   const handleResolveFeedback = async (id: string, currentStatus: string) => {
     try {
       const newStatus = currentStatus === 'resolved' ? 'new' : 'resolved';
-      const res = await fetch(`http://localhost:5000/api/admin/feedback/${id}`, {
+      const res = await fetch(`${API_URL}/api/admin/feedback/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify({ status: newStatus })
@@ -564,3 +565,5 @@ function AdminPage() {
     </div>
   );
 }
+
+export default AdminPage;
