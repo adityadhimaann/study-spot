@@ -9,30 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as BookingRouteImport } from './routes/booking'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRoomsRouteImport } from './routes/_app.rooms'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppFloorMapRouteImport } from './routes/_app.floor-map'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppBookingsRouteImport } from './routes/_app.bookings'
-import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppBookingRouteImport } from './routes/_app.booking'
 
-const RoomsRoute = RoomsRouteImport.update({
-  id: '/rooms',
-  path: '/rooms',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BookingRoute = BookingRouteImport.update({
-  id: '/booking',
-  path: '/booking',
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin-login',
+  path: '/admin-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoomsRoute = AppRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -64,101 +70,100 @@ const AppBookingsRoute = AppBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminRoute = AppAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AppBookingRoute = AppBookingRouteImport.update({
+  id: '/booking',
+  path: '/booking',
   getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/booking': typeof BookingRoute
+  '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/login': typeof LoginRoute
-  '/rooms': typeof RoomsRoute
-  '/admin': typeof AppAdminRoute
+  '/booking': typeof AppBookingRoute
   '/bookings': typeof AppBookingsRoute
   '/dashboard': typeof AppDashboardRoute
   '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
+  '/rooms': typeof AppRoomsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/booking': typeof BookingRoute
+  '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/login': typeof LoginRoute
-  '/rooms': typeof RoomsRoute
-  '/admin': typeof AppAdminRoute
+  '/booking': typeof AppBookingRoute
   '/bookings': typeof AppBookingsRoute
   '/dashboard': typeof AppDashboardRoute
   '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
+  '/rooms': typeof AppRoomsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
-  '/booking': typeof BookingRoute
+  '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/login': typeof LoginRoute
-  '/rooms': typeof RoomsRoute
-  '/_app/admin': typeof AppAdminRoute
+  '/_app/booking': typeof AppBookingRoute
   '/_app/bookings': typeof AppBookingsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/floor-map': typeof AppFloorMapRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/rooms': typeof AppRoomsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/booking'
-    | '/login'
-    | '/rooms'
     | '/admin'
+    | '/admin-login'
+    | '/login'
+    | '/booking'
     | '/bookings'
     | '/dashboard'
     | '/floor-map'
     | '/profile'
+    | '/rooms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/booking'
-    | '/login'
-    | '/rooms'
     | '/admin'
+    | '/admin-login'
+    | '/login'
+    | '/booking'
     | '/bookings'
     | '/dashboard'
     | '/floor-map'
     | '/profile'
+    | '/rooms'
   id:
     | '__root__'
     | '/'
     | '/_app'
-    | '/booking'
+    | '/admin'
+    | '/admin-login'
     | '/login'
-    | '/rooms'
-    | '/_app/admin'
+    | '/_app/booking'
     | '/_app/bookings'
     | '/_app/dashboard'
     | '/_app/floor-map'
     | '/_app/profile'
+    | '/_app/rooms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
-  BookingRoute: typeof BookingRoute
+  AdminRoute: typeof AdminRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   LoginRoute: typeof LoginRoute
-  RoomsRoute: typeof RoomsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/rooms': {
-      id: '/rooms'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof RoomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -166,11 +171,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/booking': {
-      id: '/booking'
-      path: '/booking'
-      fullPath: '/booking'
-      preLoaderRoute: typeof BookingRouteImport
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -186,6 +198,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/rooms': {
+      id: '/_app/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof AppRoomsRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -215,30 +234,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBookingsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/admin': {
-      id: '/_app/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AppAdminRouteImport
+    '/_app/booking': {
+      id: '/_app/booking'
+      path: '/booking'
+      fullPath: '/booking'
+      preLoaderRoute: typeof AppBookingRouteImport
       parentRoute: typeof AppRoute
     }
   }
 }
 
 interface AppRouteChildren {
-  AppAdminRoute: typeof AppAdminRoute
+  AppBookingRoute: typeof AppBookingRoute
   AppBookingsRoute: typeof AppBookingsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppFloorMapRoute: typeof AppFloorMapRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppRoomsRoute: typeof AppRoomsRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAdminRoute: AppAdminRoute,
+  AppBookingRoute: AppBookingRoute,
   AppBookingsRoute: AppBookingsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppFloorMapRoute: AppFloorMapRoute,
   AppProfileRoute: AppProfileRoute,
+  AppRoomsRoute: AppRoomsRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -246,10 +267,19 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
-  BookingRoute: BookingRoute,
+  AdminRoute: AdminRoute,
+  AdminLoginRoute: AdminLoginRoute,
   LoginRoute: LoginRoute,
-  RoomsRoute: RoomsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

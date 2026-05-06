@@ -1,30 +1,56 @@
 import { Bell, CalendarCheck, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+type NotificationType = "booking" | "reminder" | "info";
+
 interface Notification {
-  id: number;
-  type: "booking" | "reminder" | "info";
+  _id: string;
   title: string;
   message: string;
-  time: string;
-  read: boolean;
+  createdAt: string;
+  isRead: boolean;
 }
-
-const notifications: Notification[] = [
-  { id: 1, type: "booking", title: "Booking Confirmed", message: "Your reservation for Group Room B1 has been confirmed.", time: "2 min ago", read: false },
-  { id: 2, type: "reminder", title: "Upcoming Session", message: "Your booking at Quiet Zone A3 starts in 30 minutes.", time: "28 min ago", read: false },
-  { id: 3, type: "info", title: "New Rooms Available", message: "3 new study rooms have been added on the 4th floor.", time: "1 hour ago", read: true },
-  { id: 4, type: "booking", title: "Booking Cancelled", message: "Your reservation for Group Room C2 was cancelled.", time: "3 hours ago", read: true },
-];
 
 const iconMap = { booking: CalendarCheck, reminder: Clock, info: Info };
 
 export function NotificationDropdown() {
   const [open, setOpen] = useState(false);
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/notifications", {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
+      .then(res => res.json())
+      .then(data => setNotifications(Array.isArray(data) ? data : []))
+      .catch(err => console.error(err));
+  }, []);
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+        method: "PATCH",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const unread = notifications.filter(n => !n.isRead);
+    for (const n of unread) {
+       await handleMarkAsRead(n._id);
+    }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <div className="relative">
@@ -57,14 +83,19 @@ export function NotificationDropdown() {
                 <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
               </div>
               <div className="max-h-72 overflow-y-auto">
+                {notifications.length === 0 && (
+                  <div className="p-4 text-center text-sm text-muted-foreground">No notifications</div>
+                )}
                 {notifications.map((n) => {
-                  const Icon = iconMap[n.type];
+                  const type = n.title.toLowerCase().includes("booking") ? "booking" : "info";
+                  const Icon = iconMap[type];
                   return (
                     <div
-                      key={n.id}
+                      key={n._id}
+                      onClick={() => !n.isRead && handleMarkAsRead(n._id)}
                       className={cn(
-                        "flex gap-3 border-b p-3 transition-colors last:border-0 hover:bg-accent/50",
-                        !n.read && "bg-primary/5"
+                        "flex gap-3 border-b p-3 transition-colors last:border-0 hover:bg-accent/50 cursor-pointer",
+                        !n.isRead && "bg-primary/5"
                       )}
                     >
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -73,15 +104,15 @@ export function NotificationDropdown() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-card-foreground">{n.title}</p>
                         <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
-                        <p className="mt-0.5 text-[10px] text-muted-foreground/70">{n.time}</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground/70">{new Date(n.createdAt).toLocaleDateString()}</p>
                       </div>
-                      {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                      {!n.isRead && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
                     </div>
                   );
                 })}
               </div>
               <div className="border-t p-2">
-                <Button variant="ghost" size="sm" className="w-full text-xs">
+                <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleMarkAllAsRead}>
                   Mark all as read
                 </Button>
               </div>

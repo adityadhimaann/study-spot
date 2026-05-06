@@ -11,53 +11,162 @@ export const Route = createFileRoute("/_app/profile")({
   head: () => ({ meta: [{ title: "Profile — StudySpace" }] }),
 });
 
-const bookingHistory = [
-  { room: "Quiet Zone A3", date: "May 5, 2026", time: "10:00 - 12:00", status: "Upcoming" },
-  { room: "Group Room B1", date: "May 4, 2026", time: "14:00 - 16:00", status: "Completed" },
-  { room: "Group Room C2", date: "May 3, 2026", time: "09:00 - 11:00", status: "Completed" },
-  { room: "Quiet Zone A1", date: "May 1, 2026", time: "16:00 - 18:00", status: "Completed" },
-  { room: "Group Room B3", date: "Apr 30, 2026", time: "13:00 - 15:00", status: "Cancelled" },
-];
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
-const favoriteRooms = [
-  { name: "Quiet Zone A3", visits: 12, rating: 4.9 },
-  { name: "Group Room B1", visits: 8, rating: 4.7 },
-  { name: "Group Room C2", visits: 5, rating: 4.6 },
-];
+type UserProfile = {
+  id?: string;
+  name?: string;
+  email?: string;
+  department?: string;
+  year?: string;
+  studentId?: string;
+};
 
-const usageStats = [
-  { label: "Total Hours", value: "128h", icon: Clock },
-  { label: "Bookings Made", value: "47", icon: BookMarked },
-  { label: "Avg Rating", value: "4.8", icon: Star },
-  { label: "This Month", value: "18h", icon: TrendingUp },
-];
+type Booking = {
+  _id: string;
+  room: { name: string; floor: string; rating: number };
+  date: string;
+  slot: string;
+  status: string;
+};
 
 function ProfilePage() {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<UserProfile>({});
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch("http://localhost:5000/api/auth/me", {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setUser(data);
+        setEditForm(data);
+        localStorage.setItem("user", JSON.stringify({ ...data, id: data._id }));
+      })
+      .catch(console.error);
+
+    fetch("http://localhost:5000/api/bookings/my-bookings", {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setBookings(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
+
+  const handleSaveProfile = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify(editForm)
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setIsEditing(false);
+        toast.success("Profile updated successfully!");
+      } else {
+        toast.error("Failed to update profile.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred.");
+    }
+  };
+
+  const name = user?.name || "Student";
+  const email = user?.email || "";
+  const department = user?.department || "Unassigned";
+  const year = user?.year || "1st Year";
+  const studentId = user?.studentId || "STU-NEW";
+
+  const initials = name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
+
+  const totalHours = bookings.length * 2;
+  const bookingsMade = bookings.length;
+  
+  // Calculate favorite rooms
+  const roomVisits: Record<string, { visits: number, rating: number }> = {};
+  bookings.forEach(b => {
+    if (b.room) {
+      if (!roomVisits[b.room.name]) roomVisits[b.room.name] = { visits: 0, rating: b.room.rating || 4.5 };
+      roomVisits[b.room.name].visits += 1;
+    }
+  });
+  const favoriteRooms = Object.keys(roomVisits)
+    .map(name => ({ name, visits: roomVisits[name].visits, rating: roomVisits[name].rating }))
+    .sort((a, b) => b.visits - a.visits)
+    .slice(0, 3);
+
+  const usageStats = [
+    { label: "Total Hours", value: `${totalHours}h`, icon: Clock },
+    { label: "Bookings Made", value: bookingsMade.toString(), icon: BookMarked },
+    { label: "Avg Rating", value: "4.8", icon: Star },
+    { label: "This Month", value: `${bookings.filter(b => new Date(b.date).getMonth() === new Date().getMonth()).length * 2}h`, icon: TrendingUp },
+  ];
+  // removed old useeffect block
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Profile</h1>
-
       <Card className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
         <CardContent className="p-6 -mt-12">
           <div className="flex items-end gap-5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-card bg-gradient-to-br from-primary to-primary/70 text-2xl font-bold text-primary-foreground shadow-xl">
-              JD
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-card bg-gradient-to-br from-primary to-primary/70 text-2xl font-bold text-primary-foreground shadow-xl uppercase">
+              {initials}
             </div>
             <div className="pb-1">
-              <h2 className="text-xl font-semibold text-card-foreground">Jane Doe</h2>
-              <p className="text-sm text-muted-foreground">Student · Computer Science · 3rd Year</p>
+              <h2 className="text-xl font-semibold text-card-foreground">{name}</h2>
+              <p className="text-sm text-muted-foreground">Student · {department} · {year}</p>
             </div>
-            <Button variant="outline" className="ml-auto" size="sm">Edit Profile</Button>
+            {isEditing ? (
+              <div className="ml-auto flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+                <Button size="sm" onClick={handleSaveProfile}>Save</Button>
+              </div>
+            ) : (
+              <Button variant="outline" className="ml-auto" size="sm" onClick={() => setIsEditing(true)}>Edit Profile</Button>
+            )}
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {[
-              { icon: Mail, label: "Email", value: "jane.doe@university.edu" },
-              { icon: GraduationCap, label: "Student ID", value: "STU-2024-0892" },
-              { icon: Building, label: "Department", value: "Computer Science" },
-              { icon: User, label: "Year", value: "3rd Year" },
-            ].map((item) => (
+          {isEditing ? (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Full Name</label>
+                <input type="text" value={editForm.name || ""} onChange={e => setEditForm({...editForm, name: e.target.value})} className="w-full rounded-md border p-2 text-sm bg-background" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Student ID</label>
+                <input type="text" value={editForm.studentId || ""} onChange={e => setEditForm({...editForm, studentId: e.target.value})} className="w-full rounded-md border p-2 text-sm bg-background" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Department</label>
+                <input type="text" value={editForm.department || ""} onChange={e => setEditForm({...editForm, department: e.target.value})} className="w-full rounded-md border p-2 text-sm bg-background" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Year</label>
+                <input type="text" value={editForm.year || ""} onChange={e => setEditForm({...editForm, year: e.target.value})} className="w-full rounded-md border p-2 text-sm bg-background" />
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {[
+                { icon: Mail, label: "Email", value: email },
+                { icon: GraduationCap, label: "Student ID", value: studentId },
+                { icon: Building, label: "Department", value: department },
+                { icon: User, label: "Year", value: year },
+              ].map((item) => (
               <div key={item.label} className="flex items-center gap-3 rounded-xl border border-border/50 p-4 transition-all hover:shadow-sm hover:bg-accent/30">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <item.icon className="h-4 w-4 text-primary" />
@@ -69,6 +178,7 @@ function ProfilePage() {
               </div>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
 
@@ -124,21 +234,25 @@ function ProfilePage() {
               <h2 className="text-lg font-semibold text-card-foreground">Booking Timeline</h2>
             </div>
             <div className="space-y-0">
-              {bookingHistory.map((b, i) => (
-                <div key={i} className="flex gap-4">
+              {bookings.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No recent bookings found.</p>
+              ) : bookings.slice(0, 5).map((b, i) => (
+                <div key={b._id} className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className={cn(
                       "h-3 w-3 rounded-full border-2",
-                      b.status === "Upcoming" ? "border-primary bg-primary" :
-                      b.status === "Cancelled" ? "border-destructive bg-destructive" :
+                      b.status === "upcoming" ? "border-primary bg-primary" :
+                      b.status === "cancelled" ? "border-destructive bg-destructive" :
                       "border-success bg-success"
                     )} />
-                    {i < bookingHistory.length - 1 && <div className="w-0.5 flex-1 bg-border" />}
+                    {i < Math.min(bookings.length, 5) - 1 && <div className="w-0.5 flex-1 bg-border" />}
                   </div>
                   <div className="pb-5">
-                    <p className="text-sm font-semibold text-card-foreground">{b.room}</p>
-                    <p className="text-xs text-muted-foreground">{b.date} · {b.time}</p>
-                    <Badge variant={b.status === "Upcoming" ? "default" : b.status === "Cancelled" ? "destructive" : "success"} className="mt-1">{b.status}</Badge>
+                    <p className="text-sm font-semibold text-card-foreground">{b.room?.name || 'Unknown'}</p>
+                    <p className="text-xs text-muted-foreground">{b.date} · {b.slot}</p>
+                    <Badge variant={b.status === "upcoming" ? "default" : b.status === "cancelled" ? "destructive" : "success"} className="mt-1">
+                      {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
+                    </Badge>
                   </div>
                 </div>
               ))}

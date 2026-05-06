@@ -1,11 +1,20 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardTopbar } from "@/components/DashboardTopbar";
 import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/_app")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+  },
   component: AppLayout,
 });
+
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 function AppLayout() {
   return (
@@ -17,6 +26,7 @@ function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <FeedbackWidget />
       <Toaster position="bottom-right" />
     </div>
   );

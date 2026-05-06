@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
+import { Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -16,6 +17,45 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const [isSignup, setIsSignup] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const endpoint = isSignup ? "/register" : "/login";
+      const payload = isSignup ? { name, email, password } : { email, password };
+      
+      const res = await fetch(`http://localhost:5000/api/auth${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+      
+      // Save token (usually you'd use a context or state manager for this)
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      
+      // Redirect to dashboard
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
@@ -26,11 +66,8 @@ function LoginPage() {
         className="w-full max-w-md"
       >
         <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center gap-2 font-heading text-xl font-bold text-foreground">
-            <motion.div whileHover={{ rotate: 10 }} className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25">
-              <BookOpen className="h-5 w-5 text-primary-foreground" />
-            </motion.div>
-            StudySpace
+          <Link to="/" className="inline-flex items-center justify-center text-foreground">
+            <Logo size="lg" />
           </Link>
         </div>
 
@@ -57,39 +94,67 @@ function LoginPage() {
             <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or continue with email</span></div>
           </div>
 
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          {error && (
+            <div className="mb-4 rounded-lg bg-destructive/15 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {isSignup && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-card-foreground">Full Name</label>
-                <input type="text" placeholder="Jane Doe" className="h-11 w-full rounded-xl border bg-background/80 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" />
+                <input 
+                  type="text" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jane Doe" 
+                  className="h-11 w-full rounded-xl border bg-background/80 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" 
+                />
               </div>
             )}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-card-foreground">Email or Student ID</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input type="email" placeholder="you@university.edu" className="h-11 w-full rounded-xl border bg-background/80 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" />
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@university.edu" 
+                  className="h-11 w-full rounded-xl border bg-background/80 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" 
+                />
               </div>
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-card-foreground">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input type="password" placeholder="••••••••" className="h-11 w-full rounded-xl border bg-background/80 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" />
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  className="h-11 w-full rounded-xl border bg-background/80 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" 
+                />
               </div>
             </div>
 
-            <Button className="w-full group" size="lg" variant="hero" asChild>
-              <Link to="/dashboard">
-                {isSignup ? "Create Account" : "Log In"}
-                <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+            <Button className="w-full group" size="lg" variant="hero" type="submit" disabled={isLoading}>
+              {isLoading ? "Please wait..." : (isSignup ? "Create Account" : "Log In")}
+              {!isLoading && <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button onClick={() => setIsSignup(!isSignup)} className="font-medium text-primary hover:underline">
+            <button 
+              onClick={() => {
+                setIsSignup(!isSignup);
+                setError("");
+              }} 
+              className="font-medium text-primary hover:underline"
+            >
               {isSignup ? "Log in" : "Sign up"}
             </button>
           </p>

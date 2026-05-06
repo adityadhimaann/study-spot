@@ -1,41 +1,42 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, BookMarked, User, LogOut, ChevronLeft, ChevronRight, Map, Shield } from "lucide-react";
+import { LayoutDashboard, Map, Users, MessageSquare, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+
+interface AdminSidebarProps {
+  activeTab: string;
+  setActiveTab: (tab: "dashboard" | "rooms" | "users" | "feedback") => void;
+}
 
 const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Book Room", to: "/rooms", icon: CalendarDays },
-  { label: "Floor Map", to: "/floor-map", icon: Map },
-  { label: "My Bookings", to: "/bookings", icon: BookMarked },
-  { label: "Profile", to: "/profile", icon: User },
-];
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "rooms", label: "Rooms & Map", icon: Map },
+  { id: "users", label: "Students", icon: Users },
+  { id: "feedback", label: "Feedback", icon: MessageSquare },
+] as const;
 
-export function AppSidebar() {
+export function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const currentPath = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <aside className={cn(
-      "sticky top-0 flex h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300",
+      "sticky top-0 flex h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300 z-40",
       collapsed ? "w-[68px]" : "w-60"
     )}>
-      <div className="flex h-16 items-center border-b px-4">
+      <div className="flex h-16 items-center border-b px-4 shrink-0">
         <Logo size="md" showText={!collapsed} />
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 p-3 overflow-y-auto overflow-x-hidden">
         {navItems.map((item) => {
-          const active = currentPath === item.to;
+          const active = activeTab === item.id;
           return (
-            <Link
-              key={item.to}
-              to={item.to}
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 active
                   ? "bg-primary/10 text-primary shadow-sm"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
@@ -44,22 +45,19 @@ export function AppSidebar() {
               <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110", active && "text-primary")} />
               {!collapsed && <span>{item.label}</span>}
               {active && !collapsed && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
-                />
+                <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
               )}
-            </Link>
+            </button>
           );
         })}
       </nav>
 
-      <div className="space-y-1 border-t p-3">
+      <div className="space-y-1 border-t p-3 shrink-0">
         <button 
           onClick={() => {
             localStorage.removeItem("token");
             localStorage.removeItem("user");
-            window.location.href = "/login";
+            window.location.href = "/admin-login";
           }}
           className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-all hover:bg-destructive/10 hover:text-destructive"
         >

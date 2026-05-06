@@ -2,13 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Volume2, Filter, Search, Wifi, Star, MapPin } from "lucide-react";
-import { useState } from "react";
+import { Users, Volume2, Filter, Search, Wifi, Star, MapPin, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LandingNav } from "@/components/LandingNav";
 
-export const Route = createFileRoute("/rooms")({
+export const Route = createFileRoute("/_app/rooms")({
   component: RoomsPage,
   head: () => ({
     meta: [
@@ -21,16 +21,7 @@ export const Route = createFileRoute("/rooms")({
 type RoomType = "all" | "quiet" | "group";
 type Status = "available" | "almost-full" | "booked";
 
-const rooms = [
-  { id: 1, name: "Quiet Zone A1", type: "quiet" as const, capacity: 1, status: "available" as Status, floor: "1st Floor", amenities: ["Wi-Fi", "Power"], rating: 4.8 },
-  { id: 2, name: "Quiet Zone A2", type: "quiet" as const, capacity: 1, status: "available" as Status, floor: "1st Floor", amenities: ["Wi-Fi", "Power", "Lamp"], rating: 4.5 },
-  { id: 3, name: "Quiet Zone A3", type: "quiet" as const, capacity: 1, status: "booked" as Status, floor: "1st Floor", amenities: ["Wi-Fi"], rating: 4.9 },
-  { id: 4, name: "Group Room B1", type: "group" as const, capacity: 6, status: "available" as Status, floor: "2nd Floor", amenities: ["Wi-Fi", "Whiteboard", "TV"], rating: 4.7 },
-  { id: 5, name: "Group Room B2", type: "group" as const, capacity: 8, status: "almost-full" as Status, floor: "2nd Floor", amenities: ["Wi-Fi", "Whiteboard"], rating: 4.6 },
-  { id: 6, name: "Group Room B3", type: "group" as const, capacity: 4, status: "available" as Status, floor: "2nd Floor", amenities: ["Wi-Fi", "Power"], rating: 4.3 },
-  { id: 7, name: "Quiet Zone C1", type: "quiet" as const, capacity: 1, status: "available" as Status, floor: "3rd Floor", amenities: ["Wi-Fi", "Power"], rating: 4.4 },
-  { id: 8, name: "Group Room C2", type: "group" as const, capacity: 10, status: "available" as Status, floor: "3rd Floor", amenities: ["Wi-Fi", "Whiteboard", "TV", "Projector"], rating: 4.9 },
-];
+type Room = { _id: string; name: string; type: RoomType; capacity: number; status: Status; floor: string; amenities: string[]; rating: number };
 
 const statusConfig: Record<Status, { badge: "success" | "warning" | "destructive"; label: string; dotClass: string }> = {
   available: { badge: "success", label: "Available", dotClass: "bg-success animate-pulse" },
@@ -39,21 +30,26 @@ const statusConfig: Record<Status, { badge: "success" | "warning" | "destructive
 };
 
 function RoomsPage() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<RoomType>("all");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/rooms")
+      .then(res => res.json())
+      .then(data => { setRooms(data); setIsLoading(false); })
+      .catch(err => { console.error(err); setIsLoading(false); });
+  }, []);
+
   const filtered = rooms
     .filter((r) => filter === "all" || r.type === filter)
     .filter((r) => r.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-background">
-      <LandingNav />
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Room Availability</h1>
-            <p className="mt-1 text-muted-foreground">Browse and book available study spaces.</p>
-          </div>
+    <div>
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -80,7 +76,11 @@ function RoomsPage() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
               <Search className="h-8 w-8 text-muted-foreground" />
@@ -95,7 +95,7 @@ function RoomsPage() {
                 const status = statusConfig[room.status];
                 return (
                   <motion.div
-                    key={room.id}
+                    key={room._id}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -132,7 +132,7 @@ function RoomsPage() {
                         </div>
                         <Button className="mt-4 w-full" size="sm" disabled={room.status === "booked"} asChild={room.status !== "booked"}>
                           {room.status !== "booked" ? (
-                            <Link to="/booking" search={{ roomId: room.id }}>Book Now</Link>
+                            <Link to="/booking" search={{ roomId: room._id }}>Book Now</Link>
                           ) : "Unavailable"}
                         </Button>
                       </CardContent>

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
@@ -16,11 +17,8 @@ export function LandingNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/60 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2.5 font-heading text-lg font-bold text-foreground">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
-            <BookOpen className="h-5 w-5 text-primary-foreground" />
-          </div>
-          StudySpace
+        <Link to="/" className="text-foreground">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

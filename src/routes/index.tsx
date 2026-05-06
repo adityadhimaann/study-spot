@@ -52,7 +52,7 @@ function LandingPage() {
                 transition={{ delay: 0.2 }}
                 className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary"
               >
-                <Sparkles className="h-4 w-4" /> Library Booking Made Simple
+                 Library Booking Made Simple
               </motion.span>
               <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-foreground lg:text-5xl xl:text-6xl">
                 Book Quiet Zones &{" "}
@@ -85,15 +85,7 @@ function LandingPage() {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.2 }} className="relative">
-              <div className="overflow-hidden rounded-2xl shadow-2xl ring-1 ring-border/50">
-                <img src={heroImage} alt="Students studying in a modern library" width={1280} height={800} className="w-full" />
-              </div>
-              <div className="absolute -bottom-4 -right-4 rounded-xl border bg-card/90 p-3 shadow-xl backdrop-blur-md">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-xs font-medium text-card-foreground">12 rooms available now</span>
-                </div>
-              </div>
+              <img src={heroImage} alt="Students studying in a modern library" width={1280} height={800} className="w-full mix-blend-multiply" />
             </motion.div>
           </div>
         </div>

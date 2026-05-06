@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, BookMarked, Users, Volume2, Sparkles, TrendingUp, Clock, Star } from "lucide-react";
@@ -6,50 +6,149 @@ import { motion } from "framer-motion";
 import { FloorMap } from "@/components/FloorMap";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
   head: () => ({ meta: [{ title: "Dashboard — StudySpace" }] }),
 });
 
-const stats = [
-  { label: "Available Rooms", value: "12", icon: CalendarDays, color: "text-primary", trend: "+2", bg: "bg-primary/10" },
-  { label: "Quiet Zones", value: "8", icon: Volume2, color: "text-success", trend: "+1", bg: "bg-success/10" },
-  { label: "Active Bookings", value: "3", icon: BookMarked, color: "text-warning", trend: "0", bg: "bg-warning/10" },
-  { label: "Total Users", value: "1,240", icon: Users, color: "text-chart-2", trend: "+48", bg: "bg-chart-2/10" },
-];
+type Room = {
+  _id: string;
+  name: string;
+  type: string;
+  floor: string;
+};
 
-const recentBookings = [
-  { room: "Quiet Zone A3", date: "May 5, 2026", time: "10:00 - 12:00", status: "Active" as const },
-  { room: "Group Room B1", date: "May 4, 2026", time: "14:00 - 16:00", status: "Completed" as const },
-  { room: "Quiet Zone C2", date: "May 3, 2026", time: "09:00 - 11:00", status: "Active" as const },
-];
-
-const recommended = [
-  { name: "Quiet Zone A1", reason: "Based on your quiet study preference", type: "quiet", availability: "high" },
-  { name: "Group Room C2", reason: "Great for your team project", type: "group", availability: "medium" },
-  { name: "Quiet Zone C1", reason: "Less crowded at your preferred time", type: "quiet", availability: "high" },
-];
-
-const usageData = [
-  { day: "Mon", hours: 3 },
-  { day: "Tue", hours: 5 },
-  { day: "Wed", hours: 2 },
-  { day: "Thu", hours: 6 },
-  { day: "Fri", hours: 4 },
-  { day: "Sat", hours: 7 },
-  { day: "Sun", hours: 1 },
-];
-const maxHours = Math.max(...usageData.map((d) => d.hours));
+type Booking = {
+  _id: string;
+  room: { name: string; floor: string };
+  date: string;
+  slot: string;
+  status: string;
+};
 
 function DashboardPage() {
+  const [user, setUser] = useState<{name?: string} | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string>("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {}
+    }
+
+    const token = localStorage.getItem("token");
+
+    // Fetch rooms
+    fetch("http://localhost:5000/api/rooms")
+      .then(res => res.json())
+      .then(data => setRooms(Array.isArray(data) ? data : []))
+      .catch(console.error);
+
+    // Fetch user bookings
+    fetch("http://localhost:5000/api/bookings/my-bookings", {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setBookings(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (bookings.length === 0) return;
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    
+    const active = bookings.find(b => {
+      if (b.status === 'cancelled') return false;
+      if (b.date !== todayStr) return false;
+      try {
+        const [start, end] = b.slot.split(' - ');
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        const startDt = new Date(now); startDt.setHours(sh, sm, 0);
+        const endDt = new Date(now); endDt.setHours(eh, em, 0);
+        return now >= startDt && now < endDt;
+      } catch(e) { return false; }
+    });
+    
+    if (active) {
+      setActiveBooking(active);
+      const interval = setInterval(() => {
+        const now2 = new Date();
+        const [_, end] = active.slot.split(' - ');
+        const [eh, em] = end.split(':').map(Number);
+        const endDt = new Date(now2); endDt.setHours(eh, em, 0);
+        
+        const diffMs = endDt.getTime() - now2.getTime();
+        if (diffMs <= 0) {
+          setTimeLeft("Session Ended");
+          clearInterval(interval);
+        } else {
+          const hrs = Math.floor(diffMs / 3600000);
+          const mins = Math.floor((diffMs % 3600000) / 60000);
+          const secs = Math.floor((diffMs % 60000) / 1000);
+          setTimeLeft(`${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setActiveBooking(null);
+    }
+  }, [bookings]);
+
+  const stats = [
+    { label: "Available Rooms", value: rooms.length.toString(), icon: CalendarDays, color: "text-primary", trend: "+0", bg: "bg-primary/10" },
+    { label: "Quiet Zones", value: rooms.filter(r => r.type.toLowerCase().includes('quiet')).length.toString(), icon: Volume2, color: "text-success", trend: "+0", bg: "bg-success/10" },
+    { label: "Active Bookings", value: bookings.filter(b => b.status === 'upcoming').length.toString(), icon: BookMarked, color: "text-warning", trend: "+0", bg: "bg-warning/10" },
+    { label: "Total Bookings", value: bookings.length.toString(), icon: Users, color: "text-chart-2", trend: "+0", bg: "bg-chart-2/10" },
+  ];
+
+  const recentBookings = bookings.slice(0, 3).map(b => ({
+    id: b._id,
+    room: b.room?.name || 'Unknown',
+    date: b.date,
+    time: b.slot,
+    status: b.status === 'upcoming' ? 'Active' : b.status === 'completed' ? 'Completed' : 'Cancelled'
+  }));
+
+  const recommended = rooms.slice(0, 3).map(r => ({
+    name: r.name,
+    reason: r.type.includes('quiet') ? "Great for focused study" : "Perfect for collaboration",
+    type: r.type,
+    availability: "high"
+  }));
+
+  // Generate basic usage data from bookings
+  const usageMap: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+  bookings.forEach(b => {
+    if (b.status === 'cancelled') return;
+    const day = new Date(b.date).toLocaleDateString('en-US', { weekday: 'short' });
+    if (usageMap[day] !== undefined) {
+      try {
+        const [start, end] = b.slot.split(' - ');
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        const diffHours = (eh - sh) + (em - sm) / 60;
+        usageMap[day] += diffHours;
+      } catch(e) {
+        usageMap[day] += 2;
+      }
+    }
+  });
+  const usageData = Object.keys(usageMap).map(day => ({ day, hours: usageMap[day] }));
+  const maxHours = Math.max(...usageData.map((d) => d.hours), 1); // fallback to 1 to avoid NaN
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Welcome back, Jane 👋</h1>
-        <p className="mt-1 text-muted-foreground">Here's what's happening with your study spaces.</p>
-      </div>
-
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, i) => (
@@ -73,6 +172,30 @@ function DashboardPage() {
           </motion.div>
         ))}
       </div>
+
+      {activeBooking && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+          <Card className="border-primary/50 bg-primary/10 overflow-hidden relative shadow-lg shadow-primary/20">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+            <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between relative z-10 gap-6">
+              <div className="flex items-center gap-5 text-center sm:text-left">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary animate-pulse">
+                  <Clock className="h-8 w-8" />
+                </div>
+                <div>
+                  <Badge variant="success" className="mb-2">Session In Progress</Badge>
+                  <h2 className="text-2xl font-bold text-primary-foreground">{activeBooking.room?.name}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Booked for {activeBooking.slot}</p>
+                </div>
+              </div>
+              <div className="text-center bg-background/50 rounded-2xl p-4 min-w-[200px] border border-border/50">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Time Remaining</p>
+                <p className="text-4xl font-mono font-bold text-foreground tracking-tight tabular-nums">{timeLeft || "--:--:--"}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-3">
         {/* Recommendations */}
@@ -112,7 +235,7 @@ function DashboardPage() {
                   <Clock className="h-5 w-5 text-primary" />
                   <h2 className="text-lg font-semibold text-card-foreground">Study Hours This Week</h2>
                 </div>
-                <span className="text-2xl font-bold text-primary">{usageData.reduce((a, b) => a + b.hours, 0)}h</span>
+                <span className="text-2xl font-bold text-primary">{usageData.reduce((a, b) => a + b.hours, 0).toFixed(1)}h</span>
               </div>
               <div className="flex items-end gap-3 h-40">
                 {usageData.map((d) => (
@@ -140,7 +263,12 @@ function DashboardPage() {
               <h2 className="text-lg font-semibold text-card-foreground">Live Floor Map</h2>
               <Link to="/floor-map" className="text-sm font-medium text-primary hover:underline">Full view</Link>
             </div>
-            <FloorMap />
+            <FloorMap onRoomSelect={(id, name) => {
+              toast.success(`Selected room ${name} — redirecting to booking...`);
+              setTimeout(() => {
+                navigate({ to: "/booking", search: { roomId: id } });
+              }, 800);
+            }} />
           </CardContent>
         </Card>
       </motion.div>
@@ -163,12 +291,18 @@ function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentBookings.map((b, i) => (
-                  <tr key={i} className="border-b last:border-0 transition-colors hover:bg-accent/30">
+                {recentBookings.length === 0 ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">No recent bookings.</td></tr>
+                ) : recentBookings.map((b) => (
+                  <tr key={b.id} className="border-b last:border-0 transition-colors hover:bg-accent/30">
                     <td className="py-3 font-medium text-card-foreground">{b.room}</td>
                     <td className="py-3 text-muted-foreground">{b.date}</td>
                     <td className="py-3 text-muted-foreground">{b.time}</td>
-                    <td className="py-3"><Badge variant={b.status === "Active" ? "success" : "secondary"}>{b.status}</Badge></td>
+                    <td className="py-3">
+                      <Badge variant={b.status === "Active" ? "success" : b.status === "Cancelled" ? "destructive" : "secondary"}>
+                        {b.status}
+                      </Badge>
+                    </td>
                   </tr>
                 ))}
               </tbody>

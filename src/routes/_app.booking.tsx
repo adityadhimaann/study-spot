@@ -2,16 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, Volume2, CheckCircle, ChevronRight, ChevronLeft, MapPin, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Calendar, Clock, Users, Volume2, CheckCircle, ChevronRight, ChevronLeft, MapPin, Sparkles, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const bookingSearchSchema = z.object({ roomId: z.number().optional() });
+const bookingSearchSchema = z.object({ roomId: z.string().optional() });
 
-export const Route = createFileRoute("/booking")({
+export const Route = createFileRoute("/_app/booking")({
   component: BookingPage,
   validateSearch: bookingSearchSchema,
   head: () => ({ meta: [{ title: "Book a Room — StudySpace" }] }),
@@ -22,20 +22,7 @@ const zones = [
   { id: "group", label: "Group Study", icon: Users, desc: "Collaborative team rooms", color: "text-primary" },
 ];
 
-const roomsByZone: Record<string, { id: number; name: string; capacity: number; floor: string; available: boolean; amenities: string[] }[]> = {
-  quiet: [
-    { id: 1, name: "Quiet Zone A1", capacity: 1, floor: "1st Floor", available: true, amenities: ["Wi-Fi", "Power"] },
-    { id: 2, name: "Quiet Zone A2", capacity: 1, floor: "1st Floor", available: true, amenities: ["Wi-Fi", "Power", "Lamp"] },
-    { id: 3, name: "Quiet Zone A3", capacity: 1, floor: "1st Floor", available: false, amenities: ["Wi-Fi"] },
-    { id: 7, name: "Quiet Zone C1", capacity: 1, floor: "3rd Floor", available: true, amenities: ["Wi-Fi", "Power"] },
-  ],
-  group: [
-    { id: 4, name: "Group Room B1", capacity: 6, floor: "2nd Floor", available: true, amenities: ["Wi-Fi", "Whiteboard", "TV"] },
-    { id: 5, name: "Group Room B2", capacity: 8, floor: "2nd Floor", available: false, amenities: ["Wi-Fi", "Whiteboard"] },
-    { id: 6, name: "Group Room B3", capacity: 4, floor: "2nd Floor", available: true, amenities: ["Wi-Fi", "Power"] },
-    { id: 8, name: "Group Room C2", capacity: 10, floor: "3rd Floor", available: true, amenities: ["Wi-Fi", "Whiteboard", "TV", "Projector"] },
-  ],
-};
+type Room = { _id: string; name: string; type: string; capacity: number; status: string; floor: string; amenities: string[]; rating: number };
 
 const timeSlots = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
 const bookedSlots = ["09:00", "14:00", "15:00"];
@@ -57,17 +44,65 @@ function BookingPage() {
   const { roomId } = Route.useSearch();
   const [step, setStep] = useState(0);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const [selectedRoom, setSelectedRoom] = useState<number | null>(roomId ?? null);
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(roomId ?? null);
   const [selectedDate, setSelectedDate] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [dbRooms, setDbRooms] = useState<Room[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("You must be logged in to book a room");
+      
+      const dateStr = dates[selectedDate].toISOString().split('T')[0];
+
+      const res = await fetch("http://localhost:5000/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          room: selectedRoom,
+          date: dateStr,
+          slot: selectedSlot
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to book");
+      
+      setConfirmed(true);
+      toast.success("Booking confirmed!");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/rooms")
+      .then(res => res.json())
+      .then(data => { setDbRooms(data); setIsLoading(false); })
+      .catch(err => { console.error(err); setIsLoading(false); });
+  }, []);
+
+  const roomsByZone: Record<string, Room[]> = {
+    quiet: dbRooms.filter(r => r.type === "quiet"),
+    group: dbRooms.filter(r => r.type === "group"),
+  };
 
   const rooms = selectedZone ? roomsByZone[selectedZone] ?? [] : [];
-  const currentRoom = rooms.find((r) => r.id === selectedRoom) ?? (selectedZone ? rooms[0] : null);
+  const currentRoom = rooms.find((r) => r._id === selectedRoom) ?? (selectedZone ? rooms[0] : null);
 
   if (confirmed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="flex items-center justify-center py-20 px-4">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, type: "spring" }} className="text-center">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring", stiffness: 200 }} className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
             <CheckCircle className="h-10 w-10 text-success" />
@@ -88,8 +123,8 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-6 py-10">
+    <div>
+      <div className="mx-auto max-w-4xl">
         <h1 className="text-2xl font-bold text-foreground">Book a Room</h1>
         <p className="mt-1 text-muted-foreground">Follow the steps to reserve your perfect study space.</p>
 
@@ -145,15 +180,17 @@ function BookingPage() {
             {/* Step 1: Room */}
             {step === 1 && (
               <div className="space-y-3">
-                {rooms.map((room) => (
+                {rooms.map((room) => {
+                  const isAvailable = room.status === "available";
+                  return (
                   <Card
-                    key={room.id}
+                    key={room._id}
                     className={cn(
                       "cursor-pointer border-2 transition-all duration-200 hover:shadow-md",
-                      selectedRoom === room.id ? "border-primary bg-primary/5" : "border-border/50",
-                      !room.available && "opacity-50 cursor-not-allowed"
+                      selectedRoom === room._id ? "border-primary bg-primary/5" : "border-border/50",
+                      !isAvailable && "opacity-50 cursor-not-allowed"
                     )}
-                    onClick={() => room.available && setSelectedRoom(room.id)}
+                    onClick={() => isAvailable && setSelectedRoom(room._id)}
                   >
                     <CardContent className="flex items-center gap-4 p-5">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -170,10 +207,10 @@ function BookingPage() {
                           ))}
                         </div>
                       </div>
-                      <Badge variant={room.available ? "success" : "secondary"}>{room.available ? "Available" : "Booked"}</Badge>
+                      <Badge variant={isAvailable ? "success" : "secondary"}>{isAvailable ? "Available" : "Booked"}</Badge>
                     </CardContent>
                   </Card>
-                ))}
+                )})}
               </div>
             )}
 
@@ -258,8 +295,12 @@ function BookingPage() {
               Next <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button variant="hero" size="lg" onClick={() => { setConfirmed(true); toast.success("Booking confirmed!"); }}>
-              <Sparkles className="h-4 w-4 mr-1" /> Confirm Booking
+            <Button variant="hero" size="lg" onClick={handleConfirm} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Confirming...</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-1" /> Confirm Booking</>
+              )}
             </Button>
           )}
         </div>
