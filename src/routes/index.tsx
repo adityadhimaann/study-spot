@@ -85,7 +85,7 @@ function LandingPage() {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.2 }} className="relative">
-              <img src={heroImage} alt="Students studying in a modern library" width={1280} height={800} className="w-full mix-blend-multiply" />
+              <img src={heroImage} alt="Students studying in a modern library" width={1280} height={800} className="w-full mix-blend-multiply dark:mix-blend-normal" />
             </motion.div>
           </div>
         </div>
