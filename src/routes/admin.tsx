@@ -11,6 +11,8 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { FloorMap } from "@/components/FloorMap";
+import { AdminStorage } from "@/components/AdminStorage";
+
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {
@@ -60,7 +62,7 @@ type Room = {
 };
 
 function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"dashboard"|"rooms"|"users"|"feedback">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "rooms" | "users" | "feedback" | "storage">("dashboard");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [statsData, setStatsData] = useState<StatsData | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -202,12 +204,14 @@ function AdminPage() {
             <h1 className="text-lg font-bold leading-tight text-foreground">
               {activeTab === 'dashboard' ? 'Admin Dashboard' : 
                activeTab === 'rooms' ? 'Room Management' : 
-               activeTab === 'users' ? 'Student Directory' : 'User Feedback'}
+               activeTab === 'users' ? 'Student Directory' : 
+               activeTab === 'storage' ? 'Cloud Storage' : 'User Feedback'}
             </h1>
             <p className="text-xs text-muted-foreground hidden sm:block">
               {activeTab === 'dashboard' ? 'Overview of library booking analytics and management.' : 
                activeTab === 'rooms' ? 'Manage rooms and their physical map layout.' : 
-               activeTab === 'users' ? 'View registered students and their booking history.' : 'Review and respond to feedback reports.'}
+               activeTab === 'users' ? 'View registered students and their booking history.' : 
+               activeTab === 'storage' ? 'Manage library assets and room images.' : 'Review and respond to feedback reports.'}
             </p>
           </div>
         <div className="flex items-center gap-3">
@@ -554,6 +558,7 @@ function AdminPage() {
           </CardContent>
         </Card>
       )}
+      {activeTab === 'storage' && <AdminStorage />}
         </main>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Map, Users, MessageSquare, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Map, Users, MessageSquare, LogOut, ChevronLeft, ChevronRight, HardDrive } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface AdminSidebarProps {
   activeTab: string;
-  setActiveTab: (tab: "dashboard" | "rooms" | "users" | "feedback") => void;
+  setActiveTab: (tab: "dashboard" | "rooms" | "users" | "feedback" | "storage") => void;
 }
 
 const navItems = [
@@ -14,6 +14,7 @@ const navItems = [
   { id: "rooms", label: "Rooms & Map", icon: Map },
   { id: "users", label: "Students", icon: Users },
   { id: "feedback", label: "Feedback", icon: MessageSquare },
+  { id: "storage", label: "Storage", icon: HardDrive },
 ] as const;
 
 export function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarProps) {
