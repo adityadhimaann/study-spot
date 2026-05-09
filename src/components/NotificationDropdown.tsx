@@ -1,4 +1,5 @@
 import { Bell, CalendarCheck, Clock, Info } from "lucide-react";
+import { API_URL } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +22,7 @@ export function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/notifications", {
+    fetch(`${API_URL}/api/notifications`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
     })
       .then(res => res.json())
@@ -31,7 +32,7 @@ export function NotificationDropdown() {
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+      const res = await fetch(`${API_URL}/api/notifications/${id}/read`, {
         method: "PATCH",
         headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
       });

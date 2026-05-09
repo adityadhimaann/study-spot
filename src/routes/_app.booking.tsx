@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { API_URL } from "@/lib/api-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +61,7 @@ function BookingPage() {
       
       const dateStr = dates[selectedDate].toISOString().split('T')[0];
 
-      const res = await fetch("http://localhost:5000/api/bookings", {
+      const res = await fetch(`${API_URL}/api/bookings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +87,7 @@ function BookingPage() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/rooms")
+    fetch(`${API_URL}/api/rooms`)
       .then(res => res.json())
       .then(data => { setDbRooms(data); setIsLoading(false); })
       .catch(err => { console.error(err); setIsLoading(false); });

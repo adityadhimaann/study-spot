@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudySpace — Final Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .slide {
+    width: 1280px; min-height: 720px; margin: 0 auto 40px; padding: 60px 80px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid #334155; border-radius: 16px; position: relative; overflow: hidden;
+    page-break-after: always; display: flex; flex-direction: column; justify-content: center;
+  }
+  .slide::before {
+    content: ''; position: absolute; top: -200px; right: -200px; width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%); border-radius: 50%;
+  }
+  .slide-number { position: absolute; bottom: 30px; right: 40px; font-size: 14px; color: #64748b; font-weight: 500; }
+  .brand { position: absolute; bottom: 30px; left: 40px; font-size: 13px; color: #475569; font-weight: 500; }
+  h1 { font-size: 52px; font-weight: 900; background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
+  h2 { font-size: 36px; font-weight: 800; color: #f1f5f9; margin-bottom: 24px; }
+  h3 { font-size: 22px; font-weight: 700; color: #93c5fd; margin-bottom: 12px; }
+  p { font-size: 18px; line-height: 1.7; color: #94a3b8; }
+  .subtitle { font-size: 22px; color: #94a3b8; margin-top: 16px; font-weight: 400; }
+  .tag { display: inline-block; background: rgba(59,130,246,0.15); color: #60a5fa; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; border: 1px solid rgba(59,130,246,0.3); }
+  .screenshot { width: 100%; max-width: 900px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 20px 60px rgba(0,0,0,0.4); margin: 20px auto 0; display: block; }
+  .screenshot-sm { max-width: 700px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .card { background: rgba(30,41,59,0.8); border: 1px solid #334155; border-radius: 12px; padding: 24px; }
+  .card h3 { font-size: 18px; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: #94a3b8; }
+  .icon-circle { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 22px; }
+  .bg-blue { background: rgba(59,130,246,0.15); }
+  .bg-green { background: rgba(34,197,94,0.15); }
+  .bg-purple { background: rgba(168,85,247,0.15); }
+  .bg-amber { background: rgba(245,158,11,0.15); }
+  .bg-cyan { background: rgba(6,182,212,0.15); }
+  .bg-rose { background: rgba(244,63,94,0.15); }
+  .tech-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(51,65,85,0.6); border: 1px solid #475569; border-radius: 8px; padding: 8px 14px; font-size: 13px; color: #e2e8f0; font-weight: 500; }
+  .stat-box { text-align: center; padding: 20px; }
+  .stat-box .number { font-size: 42px; font-weight: 900; background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat-box .label { font-size: 14px; color: #64748b; margin-top: 4px; }
+  ul { list-style: none; padding: 0; }
+  ul li { padding: 8px 0; font-size: 16px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px; }
+  ul li::before { content: '✦'; color: #3b82f6; font-size: 12px; margin-top: 4px; flex-shrink: 0; }
+  .flex-center { display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
+  .team-info { margin-top: 32px; padding: 24px; background: rgba(30,41,59,0.6); border-radius: 12px; border: 1px solid #334155; }
+  @media print {
+    body { background: white; }
+    .slide { margin: 0; border: none; border-radius: 0; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<div class="slide flex-center">
+  <span class="tag">📚 Final Project Presentation</span>
+  <h1>StudySpace</h1>
+  <p class="subtitle" style="max-width:700px; text-align:center; margin-top:20px;">
+    A Smart Library Booking & Room Management Platform for Modern Campuses
+  </p>
+  <div class="team-info">
+    <p style="font-size:16px; color:#cbd5e1;"><strong>Developed by:</strong> Aditya Dhiman</p>
+    <p style="font-size:14px; color:#64748b; margin-top:6px;">May 2026 · Working Website + Interface</p>
+  </div>
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">01</span>
+</div>
+
+<!-- SLIDE 2: Problem Statement -->
+<div class="slide">
+  <span class="tag">🎯 The Problem</span>
+  <h2>Why StudySpace?</h2>
+  <div class="grid-2">
+    <div>
+      <p>University libraries face chronic space management challenges:</p>
+      <ul style="margin-top:20px;">
+        <li>Students waste 15-20 minutes searching for available study spots</li>
+        <li>No centralized system for room reservation or availability tracking</li>
+        <li>Librarians lack tools to monitor space utilization and peak hours</li>
+        <li>Double-bookings and overcrowding during exam periods</li>
+        <li>No feedback channel between students and library administration</li>
+      </ul>
+    </div>
+    <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+      <div class="stat-box"><div class="number">85%</div><div class="label">Students report difficulty finding study spaces</div></div>
+      <div class="stat-box" style="margin-top:16px;"><div class="number">20min</div><div class="label">Average time wasted per visit searching</div></div>
+      <div class="stat-box" style="margin-top:16px;"><div class="number">0</div><div class="label">Digital booking tools available</div></div>
+    </div>
+  </div>
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">02</span>
+</div>
+
+<!-- SLIDE 3: Solution Overview -->
+<div class="slide">
+  <span class="tag">💡 Our Solution</span>
+  <h2>Platform Overview</h2>
+  <p style="max-width:800px; margin-bottom:24px;">StudySpace is a full-stack web application that digitizes library space management with real-time booking, interactive floor maps, and comprehensive admin analytics.</p>
+  <div class="grid-3">
+    <div class="card"><div class="icon-circle bg-blue">🗓️</div><h3>Smart Booking</h3><p>4-step wizard with zone selection, room picking, time slots & instant confirmation</p></div>
+    <div class="card"><div class="icon-circle bg-green">🗺️</div><h3>Interactive Floor Map</h3><p>SVG-based 2D floor map with real-time room status and click-to-book</p></div>
+    <div class="card"><div class="icon-circle bg-purple">📊</div><h3>Admin Analytics</h3><p>Room usage stats, peak hour charts, booking management & student directory</p></div>
+    <div class="card"><div class="icon-circle bg-amber">🔐</div><h3>Dual Auth System</h3><p>Separate student & admin portals with JWT-based secure authentication</p></div>
+    <div class="card"><div class="icon-circle bg-cyan">💬</div><h3>Feedback System</h3><p>Students submit bug reports & feature requests; admins resolve tickets</p></div>
+    <div class="card"><div class="icon-circle bg-rose">☁️</div><h3>Cloud Storage</h3><p>Cloudinary-powered media management for room images & profile photos</p></div>
+  </div>
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">03</span>
+</div>
+
+<!-- SLIDE 4: Landing Page -->
+<div class="slide">
+  <span class="tag">🖥️ Screenshots</span>
+  <h2>Landing Page — Hero Section</h2>
+  <p>Premium, animated landing page with social proof and clear CTAs.</p>
+  <img src="file:///Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/artifacts/screenshots/01_landing_hero.png" class="screenshot" alt="Landing Page Hero">
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">04</span>
+</div>
+
+<!-- SLIDE 5: Features Section -->
+<div class="slide">
+  <span class="tag">🖥️ Screenshots</span>
+  <h2>Features Section</h2>
+  <p>Six key platform features presented in animated, hoverable cards.</p>
+  <img src="file:///Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/artifacts/screenshots/02_features.png" class="screenshot" alt="Features Section">
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">05</span>
+</div>
+
+<!-- SLIDE 6: Login Pages -->
+<div class="slide">
+  <span class="tag">🖥️ Screenshots</span>
+  <h2>Authentication — Student & Admin Login</h2>
+  <div class="grid-2">
+    <div style="text-align:center;">
+      <h3>Student Login</h3>
+      <img src="file:///Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/artifacts/screenshots/03_student_login.png" style="width:100%; border-radius:12px; border:1px solid #334155;" alt="Student Login">
+    </div>
+    <div style="text-align:center;">
+      <h3>Admin Portal</h3>
+      <img src="file:///Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/artifacts/screenshots/06_admin_login.png" style="width:100%; border-radius:12px; border:1px solid #334155;" alt="Admin Login">
+    </div>
+  </div>
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">06</span>
+</div>
+
+<!-- SLIDE 7: Student Dashboard -->
+<div class="slide">
+  <span class="tag">🖥️ Screenshots</span>
+  <h2>Student Dashboard</h2>
+  <p>Personalized dashboard with stats, study hour chart, live floor map & recent bookings.</p>
+  <img src="file:///Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/artifacts/screenshots/04_student_dashboard.png" class="screenshot" alt="Student Dashboard">
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">07</span>
+</div>
+
+<!-- SLIDE 8: Booking Wizard -->
+<div class="slide">
+  <span class="tag">🖥️ Screenshots</span>
+  <h2>4-Step Booking Wizard</h2>
+  <p>Guided booking flow: Zone → Room → Time → Confirm with animated transitions.</p>
+  <img src="file:///Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/artifacts/screenshots/05_booking_wizard.png" class="screenshot" alt="Booking Wizard">
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">08</span>
+</div>
+
+<!-- SLIDE 9: Tech Stack -->
+<div class="slide">
+  <span class="tag">⚙️ Technology</span>
+  <h2>Tech Stack & Architecture</h2>
+  <div class="grid-2">
+    <div>
+      <h3>Frontend</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px;">
+        <span class="tech-badge">⚛️ React 19</span>
+        <span class="tech-badge">🧭 TanStack Router</span>
+        <span class="tech-badge">🎨 Tailwind CSS 4</span>
+        <span class="tech-badge">✨ Framer Motion</span>
+        <span class="tech-badge">📐 Radix UI</span>
+        <span class="tech-badge">⚡ Vite 7</span>
+        <span class="tech-badge">📝 TypeScript</span>
+        <span class="tech-badge">📊 Recharts</span>
+      </div>
+      <h3>Backend</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px;">
+        <span class="tech-badge">🟢 Node.js</span>
+        <span class="tech-badge">🚂 Express.js 5</span>
+        <span class="tech-badge">🍃 MongoDB Atlas</span>
+        <span class="tech-badge">🔑 JWT Auth</span>
+        <span class="tech-badge">☁️ Cloudinary</span>
+        <span class="tech-badge">🔒 bcrypt.js</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color:#f1f5f9;">Architecture</h3>
+      <ul>
+        <li>SPA frontend with file-based routing (TanStack)</li>
+        <li>RESTful API backend with 7 route modules</li>
+        <li>MongoDB Atlas cloud database with Mongoose ODM</li>
+        <li>JWT token-based auth with role guards</li>
+        <li>Cloudinary CDN for image/media hosting</li>
+        <li>AWS Amplify (frontend) + Elastic Beanstalk (backend)</li>
+      </ul>
+    </div>
+  </div>
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">09</span>
+</div>
+
+<!-- SLIDE 10: Key Features Deep Dive -->
+<div class="slide">
+  <span class="tag">🔍 Features Deep Dive</span>
+  <h2>Key Differentiators</h2>
+  <div class="grid-2" style="margin-top:16px;">
+    <div class="card">
+      <h3>🗺️ Interactive SVG Floor Map</h3>
+      <ul><li>Multi-floor navigation (1st, 2nd, 3rd floor)</li><li>Color-coded room status (available/booked)</li><li>Click-to-book directly from map</li><li>Admin map editor for coordinates</li></ul>
+    </div>
+    <div class="card">
+      <h3>📊 Admin Analytics Dashboard</h3>
+      <ul><li>Real-time booking statistics & trends</li><li>Room usage percentage bars</li><li>Peak hour heat-map visualization</li><li>Student directory with search filters</li></ul>
+    </div>
+    <div class="card">
+      <h3>⏱️ Live Session Tracker</h3>
+      <ul><li>Active booking detection on dashboard</li><li>Real-time countdown timer display</li><li>Session status badges (Active/Completed)</li><li>Auto-detect current time slot</li></ul>
+    </div>
+    <div class="card">
+      <h3>💬 Feedback & Notifications</h3>
+      <ul><li>In-app feedback widget (bug/feature/general)</li><li>Admin notification bell with live count</li><li>Approve/reject booking requests inline</li><li>Resolve/reopen feedback tickets</li></ul>
+    </div>
+  </div>
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">10</span>
+</div>
+
+<!-- SLIDE 11: Thank You -->
+<div class="slide flex-center">
+  <h1 style="font-size:64px;">Thank You</h1>
+  <p class="subtitle" style="margin-top:20px; max-width:600px; text-align:center;">
+    StudySpace — Making library space booking simple, intelligent, and efficient for every student.
+  </p>
+  <div style="margin-top:40px; display:flex; gap:16px;">
+    <span class="tech-badge">📧 dhimanaditya56@gmail.com</span>
+    <span class="tech-badge">🔗 github.com/adityadhimaann/study-spot</span>
+  </div>
+  <span class="brand">StudySpace © 2026</span>
+  <span class="slide-number">11</span>
+</div>
+
+</body>
+</html>

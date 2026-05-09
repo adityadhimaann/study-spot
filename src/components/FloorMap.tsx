@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_URL } from "@/lib/api-config";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Users, Volume2, Wifi, Trash2 } from "lucide-react";
@@ -41,7 +42,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   
   useEffect(() => {
-    fetch("http://localhost:5000/api/rooms")
+    fetch(`${API_URL}/api/rooms`)
       .then(res => res.json())
       .then(data => {
         if (!Array.isArray(data)) return;
@@ -65,7 +66,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
   const handleSaveEdit = async () => {
     if (!editingRoom) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/rooms/${editingRoom.id}`, {
+      const res = await fetch(`${API_URL}/api/admin/rooms/${editingRoom.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +97,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
     if (!window.confirm(`Are you sure you want to delete ${editingRoom.name}? This will also delete any associated bookings.`)) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/rooms/${editingRoom.id}`, {
+      const res = await fetch(`${API_URL}/api/admin/rooms/${editingRoom.id}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`

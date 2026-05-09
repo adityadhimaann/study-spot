@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "@/lib/api-config";
 import { MessageSquarePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,7 @@ export function FeedbackWidget() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("http://localhost:5000/api/feedback", {
+      const res = await fetch(`${API_URL}/api/feedback`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

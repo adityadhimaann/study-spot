@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { API_URL } from "@/lib/api-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ function MyBookingsPage() {
   const [isInviting, setIsInviting] = useState(false);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/bookings/my-bookings`, {
+    fetch(`${API_URL}/api/bookings/my-bookings`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
     })
       .then(res => res.json())
@@ -44,7 +45,7 @@ function MyBookingsPage() {
 
   const handleCancel = async (id: string, roomName: string) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/bookings/${id}/cancel`, {
+      const res = await fetch(`${API_URL}/api/bookings/${id}/cancel`, {
         method: "PATCH",
         headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
       });
@@ -60,7 +61,7 @@ function MyBookingsPage() {
 
   const handleSaveEdit = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${id}`, {
+      const res = await fetch(`${API_URL}/api/bookings/${id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
@@ -88,7 +89,7 @@ function MyBookingsPage() {
     
     setIsInviting(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${inviteModalOpen}/invite`, {
+      const res = await fetch(`${API_URL}/api/bookings/${inviteModalOpen}/invite`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "@/lib/api-config";
 import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Lock, Mail, ArrowRight, Shield } from "lucide-react";
@@ -22,7 +23,7 @@ function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

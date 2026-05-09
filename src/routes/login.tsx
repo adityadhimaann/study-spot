@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { API_URL } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
 import { Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -32,7 +33,7 @@ function LoginPage() {
       const endpoint = isSignup ? "/register" : "/login";
       const payload = isSignup ? { name, email, password } : { email, password };
       
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth${endpoint}`, {
+      const res = await fetch(`${API_URL}/api/auth${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

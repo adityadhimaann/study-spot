@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { FloorMap } from "@/components/FloorMap";
 import { AdminStorage } from "@/components/AdminStorage";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from "@/lib/api-config";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {

@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { API_URL } from "@/lib/api-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, BookMarked, Users, Volume2, Sparkles, TrendingUp, Clock, Star } from "lucide-react";
@@ -48,13 +49,13 @@ function DashboardPage() {
     const token = localStorage.getItem("token");
 
     // Fetch rooms
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/rooms`)
+    fetch(`${API_URL}/api/rooms`)
       .then(res => res.json())
       .then(data => setRooms(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     // Fetch user bookings
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/bookings/my-bookings`, {
+    fetch(`${API_URL}/api/bookings/my-bookings`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
