@@ -52,7 +52,9 @@ export function DashboardTopbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background/60 px-6 backdrop-blur-xl">
+    <header className="fixed top-0 right-0 z-40 flex h-16 items-center justify-between border-b bg-background/60 px-6 backdrop-blur-xl transition-all duration-300" 
+      style={{ left: typeof window !== 'undefined' && document.querySelector('aside')?.classList.contains('w-[68px]') ? '68px' : '240px' }}
+    >
       <div className="flex items-center gap-6">
         <div className="flex flex-col">
           <h1 className="text-lg font-bold leading-tight text-foreground">{title}</h1>

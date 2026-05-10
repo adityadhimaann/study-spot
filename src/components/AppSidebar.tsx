@@ -20,7 +20,7 @@ export function AppSidebar() {
 
   return (
     <aside className={cn(
-      "sticky top-0 flex h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300",
+      "fixed top-0 left-0 z-50 flex h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300",
       collapsed ? "w-[68px]" : "w-60"
     )}>
       <div className="flex h-16 items-center border-b px-4">

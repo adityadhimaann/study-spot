@@ -24,9 +24,11 @@ function AppLayout() {
   return (
     <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
       <AppSidebar />
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col transition-all duration-300"
+        style={{ marginLeft: typeof window !== 'undefined' && document.querySelector('aside')?.classList.contains('w-[68px]') ? '68px' : '240px' }}
+      >
         <DashboardTopbar />
-        <main className="flex-1 p-6 overflow-x-hidden">
+        <main className="flex-1 p-6 pt-24 overflow-x-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentPath}
