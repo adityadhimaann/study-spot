@@ -137,22 +137,6 @@ function LandingPage() {
                 </div>
               </motion.div>
             </motion.div>
-              <motion.div 
-                animate={{ y: [0, -10, 0] }} 
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-6 -right-6 rounded-2xl bg-card/90 p-4 shadow-xl border border-border/50 backdrop-blur-md hidden sm:block"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center text-success">
-                    <CheckCircle className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Availability</p>
-                    <p className="text-sm font-bold">12 Rooms Free</p>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
           </div>
         </div>
       </section>
