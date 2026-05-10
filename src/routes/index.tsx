@@ -63,7 +63,7 @@ function LandingPage() {
               initial={{ opacity: 0, y: 24 }} 
               animate={{ opacity: 1, y: 0 }} 
               transition={{ duration: 0.7 }}
-              className="relative z-10"
+              className="relative z-10 text-center lg:text-left"
             >
               <motion.span
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -81,7 +81,7 @@ function LandingPage() {
               <p className="mt-5 max-w-lg text-lg text-muted-foreground">
                 Find and reserve the perfect study space in your library. Whether you need a quiet corner or a group room, we've got you covered.
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                 <Link 
                   to="/login"
                   className="group inline-flex h-11 items-center justify-center rounded-xl bg-primary px-8 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:scale-105 active:scale-95"
@@ -173,7 +173,7 @@ function LandingPage() {
             <h2 className="text-3xl font-bold text-foreground">What Students Say</h2>
             <p className="mt-3 text-muted-foreground">Hear from fellow students who use StudySpace daily.</p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((t, i) => (
               <motion.div key={t.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}>
                 <Card className="h-full border-border/40 bg-card/80 backdrop-blur-sm">

@@ -3,6 +3,10 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { useRouterState, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { AppSidebar } from "@/components/AppSidebar";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 import { useState, useEffect } from "react";
 
@@ -51,11 +55,32 @@ export function DashboardTopbar() {
     subtitle = "Manage your account and preferences.";
   }
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const leftOffset = isMobile 
+    ? "0px" 
+    : (typeof window !== 'undefined' && document.querySelector('aside')?.classList.contains('w-[68px]') ? '68px' : '240px');
+
   return (
     <header className="fixed top-0 right-0 z-40 flex h-16 items-center justify-between border-b bg-background/60 px-6 backdrop-blur-xl transition-all duration-300" 
-      style={{ left: typeof window !== 'undefined' && document.querySelector('aside')?.classList.contains('w-[68px]') ? '68px' : '240px' }}
+      style={{ left: leftOffset }}
     >
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
+        {isMobile && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-60 border-none">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <div className="h-full">
+                {/* We can pass a prop to sidebar to tell it it's in mobile mode if needed, but for now it works as is */}
+                <AppSidebar forceShow />
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
         <div className="flex flex-col">
           <h1 className="text-lg font-bold leading-tight text-foreground">{title}</h1>
           <p className="text-xs text-muted-foreground hidden sm:block">{subtitle}</p>

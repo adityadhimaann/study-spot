@@ -14,15 +14,18 @@ const navItems = [
   { label: "Profile", to: "/profile", icon: User },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ forceShow = false }: { forceShow?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <aside className={cn(
-      "fixed top-0 left-0 z-50 flex h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300",
-      collapsed ? "w-[68px]" : "w-60"
-    )}>
+    <>
+      {/* Sidebar for Desktop */}
+      <aside className={cn(
+        "fixed top-0 left-0 z-50 h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300 md:flex",
+        collapsed ? "w-[68px]" : "w-60",
+        forceShow ? "flex relative h-full w-full border-none bg-transparent" : "hidden"
+      )}>
       <div className="flex h-16 items-center border-b px-4">
         <Link to="/" className="hover:opacity-80 transition-opacity">
           <Logo size="md" showText={!collapsed} />
