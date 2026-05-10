@@ -1,7 +1,8 @@
 import { Search } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
-import { useRouterState } from "@tanstack/react-router";
+import { useRouterState, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
 import { useState, useEffect } from "react";
 
@@ -19,13 +20,15 @@ export function DashboardTopbar() {
     }
   }, []);
 
-  const name = user?.name || "Jane Doe";
+  const name = user?.name || "";
   const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase();
+    ? name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase()
+    : "";
 
   const location = useRouterState({ select: (s) => s.location.pathname });
   let title = "";
@@ -66,16 +69,26 @@ export function DashboardTopbar() {
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        <NotificationDropdown />
-        <div className="flex items-center gap-2.5 ml-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 uppercase">
-            {initials}
+        {user ? (
+          <>
+            <NotificationDropdown />
+            <div className="flex items-center gap-2.5 ml-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 uppercase">
+                {initials}
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-medium text-foreground">{name}</p>
+                <p className="text-xs text-muted-foreground">{user?.role || 'Student'}</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="ml-4">
+             <Button variant="default" size="sm" asChild className="rounded-xl">
+               <Link to="/login">Sign In</Link>
+             </Button>
           </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-medium text-foreground">{name}</p>
-            <p className="text-xs text-muted-foreground">Student</p>
-          </div>
-        </div>
+        )}
       </div>
     </header>
   );
