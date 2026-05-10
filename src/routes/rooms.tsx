@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LandingNav } from "@/components/LandingNav";
 
-export const Route = createFileRoute("/_app/rooms")({
+export const Route = createFileRoute("/rooms")({
   component: RoomsPage,
   head: () => ({
     meta: [
@@ -48,8 +48,13 @@ function RoomsPage() {
     .filter((r) => r.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div>
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen bg-background pb-20">
+      <LandingNav />
+      <div className="mx-auto max-w-7xl px-6 pt-12">
+        <div className="mb-12">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Room Availability</h1>
+          <p className="mt-2 text-lg text-muted-foreground">Browse available quiet zones and group study rooms in real-time.</p>
+        </div>
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
           <div className="flex items-center gap-2">
             <div className="relative">

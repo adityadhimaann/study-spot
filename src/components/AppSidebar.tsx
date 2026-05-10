@@ -24,7 +24,9 @@ export function AppSidebar() {
       collapsed ? "w-[68px]" : "w-60"
     )}>
       <div className="flex h-16 items-center border-b px-4">
-        <Logo size="md" showText={!collapsed} />
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <Logo size="md" showText={!collapsed} />
+        </Link>
       </div>
 
       <nav className="flex-1 space-y-1 p-3">

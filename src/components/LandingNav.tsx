@@ -37,8 +37,16 @@ export function LandingNav() {
 
         <div className="hidden items-center gap-2 md:flex">
           <ThemeToggle />
-          <Button variant="ghost" asChild><Link to="/login">Log in</Link></Button>
-          <Button variant="default" asChild><Link to="/login">Sign up</Link></Button>
+          {typeof window !== "undefined" && localStorage.getItem("token") ? (
+            <Button variant="default" asChild className="rounded-xl px-6">
+              <Link to="/dashboard">Dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" asChild><Link to="/login">Log in</Link></Button>
+              <Button variant="default" asChild><Link to="/login">Sign up</Link></Button>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
