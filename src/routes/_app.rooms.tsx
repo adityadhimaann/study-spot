@@ -156,6 +156,6 @@ function RoomsPage() {
           </div>
         )}
       </div>
-    </div>
-  );
+    );
+  }
 }
