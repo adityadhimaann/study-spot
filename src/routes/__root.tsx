@@ -32,7 +32,25 @@ export const Route = createRootRoute({
 
 
 
+import { useState, useEffect } from "react";
+import Lenis from "lenis";
+
 function RootComponent() {
+  useEffect(() => {
+    const lenis = new Lenis();
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+
   return (
     <ThemeProvider>
       <Outlet />
