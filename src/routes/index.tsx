@@ -45,7 +45,12 @@ function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
         <div className="mx-auto max-w-7xl px-6 py-20 lg:py-28">
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <motion.div 
+              initial={{ opacity: 0, y: 24 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.7 }}
+              className="relative z-10"
+            >
               <motion.span
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
