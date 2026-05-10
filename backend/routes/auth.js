@@ -158,4 +158,69 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// @route   POST /api/auth/google
+// @desc    Login/Register with Google
+router.post('/google', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: 'Token is required' });
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: googleId } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user if they don't exist
+      user = new User({
+        name,
+        email,
+        googleId,
+        password: await bcrypt.hash(Math.random().toString(36), 10), // Random password for social users
+        role: 'student',
+        profilePicture: picture,
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      // Link google account to existing email user
+      user.googleId = googleId;
+      if (!user.profilePicture) user.profilePicture = picture;
+      await user.save();
+    }
+
+    // Create token
+    const jwtToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || 'secret123',
+      { expiresIn: '1d' }
+    );
+
+    res.json({
+      token: jwtToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        year: user.year,
+        studentId: user.studentId,
+        profilePicture: user.profilePicture,
+      },
+      message: 'Google login successful',
+    });
+  } catch (err) {
+    console.error('Google Auth Error:', err);
+    res.status(401).json({ message: 'Google authentication failed' });
+  }
+});
+
 module.exports = router;

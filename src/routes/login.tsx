@@ -5,6 +5,7 @@ import { Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -58,7 +59,33 @@ function LoginPage() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Google auth failed");
+      
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE";
+
   return (
+    <GoogleOAuthProvider clientId={clientId}>
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -81,13 +108,16 @@ function LoginPage() {
           </p>
 
           {/* Social login */}
-          <div className="mb-6 grid grid-cols-2 gap-3">
-            <Button variant="outline" className="gap-2 transition-all hover:shadow-md">
-              <Chrome className="h-4 w-4" /> Google
-            </Button>
-            <Button variant="outline" className="gap-2 transition-all hover:shadow-md">
-              <Github className="h-4 w-4" /> GitHub
-            </Button>
+          <div className="mb-6 flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google Login Failed")}
+              useOneTap
+              theme="outline"
+              shape="pill"
+              text="continue_with"
+              width="100%"
+            />
           </div>
 
           <div className="relative mb-6">
@@ -162,5 +192,6 @@ function LoginPage() {
         </div>
       </motion.div>
     </div>
+    </GoogleOAuthProvider>
   );
 }
