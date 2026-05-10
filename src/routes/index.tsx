@@ -108,39 +108,35 @@ function LandingPage() {
               </div>
             </motion.div>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.92 }} 
+              initial={{ opacity: 0, scale: 0.95 }} 
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ duration: 0.7, delay: 0.2 }} 
-              className="relative group"
+              className="relative"
             >
-              {/* Glass decorative background */}
-              <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-primary/0 rounded-[3rem] blur-2xl opacity-50 group-hover:opacity-80 transition-opacity" />
+              <img 
+                src={heroImage} 
+                alt="Students studying in a modern library" 
+                className="w-full h-auto" 
+              />
               
-              <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/5 p-1 shadow-2xl backdrop-blur-md transition-all duration-500 hover:shadow-primary/20">
-                <img 
-                  src={heroImage} 
-                  alt="Students studying in a modern library" 
-                  className="w-full h-full object-cover rounded-[2.4rem] transition-transform duration-700 group-hover:scale-[1.03]" 
-                />
-                
-                {/* Floating availability badge */}
-                <motion.div 
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 1, duration: 0.5 }}
-                  className="absolute right-6 top-6 flex items-center gap-3 rounded-2xl border border-white/20 bg-white/20 p-3 shadow-xl backdrop-blur-md transition-transform hover:scale-105"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/20 text-success shadow-inner">
-                    <CheckCircle className="h-6 w-6" />
+              {/* Floating availability badge */}
+              <motion.div 
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 1, duration: 0.5 }}
+                className="absolute right-6 top-6 flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-3 shadow-xl backdrop-blur-md"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/20 text-success">
+                  <CheckCircle className="h-6 w-6" />
+                </div>
+                <div className="pr-2 text-left">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/60">Live</div>
+                  <div className="text-sm font-extrabold text-white">
+                    {availableCount !== null ? `${availableCount} Rooms Free` : "12 Rooms Free"}
                   </div>
-                  <div className="pr-2">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/60">Real-time</div>
-                    <div className="text-sm font-extrabold text-white">{availableCount !== null ? `${availableCount} Rooms Free` : "Checking..."}</div>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Floating badges for extra 'WOW' factor */}
+                </div>
+              </motion.div>
+            </motion.div>
               <motion.div 
                 animate={{ y: [0, -10, 0] }} 
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}

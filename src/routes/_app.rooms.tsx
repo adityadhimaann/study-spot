@@ -49,10 +49,6 @@ function RoomsPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Room Availability</h1>
-        <p className="text-sm text-muted-foreground">Browse available quiet zones and group study rooms in real-time.</p>
-      </div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
           <div className="flex items-center gap-2">
             <div className="relative">
