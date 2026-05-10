@@ -96,7 +96,7 @@ function LoginPage() {
                alt="Study Illustration" 
                className="h-full w-full object-cover"
              />
-             <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-background/20" />
+             <div className="absolute inset-0 bg-black/40" />
            </motion.div>
 
            <div className="relative z-10 p-12 text-center">
@@ -104,7 +104,7 @@ function LoginPage() {
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.7 }}
-               className="text-4xl font-bold tracking-tight text-foreground"
+               className="text-4xl font-bold tracking-tight text-white drop-shadow-2xl"
              >
                Focused Environment,<br/> Better Results.
              </motion.h2>
@@ -112,7 +112,7 @@ function LoginPage() {
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.9 }}
-               className="mt-4 text-lg text-muted-foreground"
+               className="mt-4 text-lg text-white/90 font-medium drop-shadow-lg"
              >
                Join thousands of students optimizing their study time.
              </motion.p>
@@ -204,7 +204,7 @@ function LoginPage() {
                           type="text" 
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          placeholder="Jane Doe" 
+                          placeholder="Your Name" 
                           className="h-12 w-full rounded-2xl border bg-muted/30 pl-11 pr-4 text-sm outline-none ring-primary/20 transition-all focus:border-primary focus:ring-4" 
                         />
                       </div>
