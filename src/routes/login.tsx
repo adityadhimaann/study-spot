@@ -17,7 +17,7 @@ export const Route = createFileRoute("/login")({
   }),
 });
 
-const illustrationPath = "/Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/study_login_illustration_1778443997605.png";
+const illustrationPath = "/login-illustration.png";
 
 function LoginPage() {
   const [isSignup, setIsSignup] = useState(false);
@@ -94,20 +94,12 @@ function LoginPage() {
              <img 
                src={illustrationPath} 
                alt="Study Illustration" 
-               className="h-full w-full object-cover opacity-80 mix-blend-luminosity brightness-110"
+               className="h-full w-full object-cover"
              />
              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-background/20" />
            </motion.div>
 
            <div className="relative z-10 p-12 text-center">
-             <motion.div
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.5 }}
-               className="mb-8 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-background/20 backdrop-blur-md"
-             >
-               <Sparkles className="h-8 w-8 text-primary shadow-primary" />
-             </motion.div>
              <motion.h2 
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
