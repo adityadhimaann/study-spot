@@ -62,7 +62,7 @@ function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden pt-16">
       <LandingNav />
 
       {/* ─── HERO ─────────────────────────────────────────────── */}
