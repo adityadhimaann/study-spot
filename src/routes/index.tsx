@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { LandingNav } from "@/components/LandingNav";
 import { Footer } from "@/components/Footer";
 import { Shield, Clock, Users, Wifi, CalendarCheck, MapPin, ArrowRight, Star, CheckCircle, Zap, BookOpen } from "lucide-react";
+import heroImage from "@/assets/hero-illustration.jpg";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { API_URL } from "@/lib/api-config";
@@ -127,14 +128,9 @@ function LandingPage() {
 
             {/* Right: Dashboard Mockup */}
             <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.2 }} className="relative">
-              <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(99,102,241,0.4)]" style={{ perspective: '1000px' }}>
-                <motion.div
-                  animate={{ rotateY: [0, 2, 0, -2, 0], rotateX: [0, -1, 0, 1, 0] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <img src="/hero-3d.png" alt="3D Campus" className="w-full h-auto" />
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-[#050510]/70 via-transparent to-transparent" />
-                </motion.div>
+              <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(99,102,241,0.4)]">
+                <img src={heroImage} alt="Students studying" className="w-full h-auto mix-blend-luminosity brightness-110" />
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-[#050510]/60 via-transparent to-transparent" />
                 {/* Neon ring border glow */}
                 <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-primary/30 via-transparent to-violet-500/30 blur-sm" />
               </div>
