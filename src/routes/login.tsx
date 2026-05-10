@@ -118,20 +118,7 @@ function LoginPage() {
              </motion.p>
            </div>
 
-           {/* Floating badges for visual flair */}
-           <motion.div 
-             animate={{ y: [0, -10, 0] }}
-             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-             className="absolute bottom-12 left-12 flex items-center gap-3 rounded-2xl border bg-background/40 p-4 backdrop-blur-xl"
-           >
-             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/20 text-success">
-               <ShieldCheck className="h-5 w-5" />
-             </div>
-             <div>
-               <p className="text-xs font-bold uppercase text-muted-foreground">Trusted by</p>
-               <p className="text-sm font-bold text-foreground">15+ Universities</p>
-             </div>
-           </motion.div>
+
         </div>
 
         {/* Right Side: Form */}
