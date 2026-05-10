@@ -1,21 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { API_URL } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
+import { Mail, Lock, ArrowRight, User, Sparkles, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
   head: () => ({
     meta: [
-      { title: "Log In — StudySpace" },
-      { name: "description", content: "Sign in to your StudySpace account to manage bookings." },
+      { title: "Authentication — StudySpace" },
+      { name: "description", content: "Join StudySpace to find and book the best study spots on campus." },
     ],
   }),
 });
+
+const illustrationPath = "/Users/aditya/.gemini/antigravity/brain/9d11ae78-bddf-4fab-b7d8-f88a1442128c/study_login_illustration_1778443997605.png";
 
 function LoginPage() {
   const [isSignup, setIsSignup] = useState(false);
@@ -41,16 +43,10 @@ function LoginPage() {
       });
       
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Something went wrong");
       
-      if (!res.ok) {
-        throw new Error(data.message || "Something went wrong");
-      }
-      
-      // Save token (usually you'd use a context or state manager for this)
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      
-      // Redirect to dashboard
       window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err.message);
@@ -82,116 +78,198 @@ function LoginPage() {
     }
   };
 
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE";
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "39962002042-acubos9hbsrj9qsce5ptl86n59h12181.apps.googleusercontent.com";
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md"
-      >
-        <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center justify-center text-foreground">
-            <Logo size="lg" />
-          </Link>
+      <div className="flex min-h-screen w-full bg-background selection:bg-primary/30">
+        {/* Left Side: Illustration (Desktop Only) */}
+        <div className="relative hidden w-1/2 flex-col items-center justify-center overflow-hidden bg-muted/30 lg:flex">
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.95 }}
+             animate={{ opacity: 1, scale: 1 }}
+             transition={{ duration: 1.2, ease: "easeOut" }}
+             className="absolute inset-0 z-0"
+           >
+             <img 
+               src={illustrationPath} 
+               alt="Study Illustration" 
+               className="h-full w-full object-cover opacity-80 mix-blend-luminosity brightness-110"
+             />
+             <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-background/20" />
+           </motion.div>
+
+           <div className="relative z-10 p-12 text-center">
+             <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.5 }}
+               className="mb-8 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-background/20 backdrop-blur-md"
+             >
+               <Sparkles className="h-8 w-8 text-primary shadow-primary" />
+             </motion.div>
+             <motion.h2 
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.7 }}
+               className="text-4xl font-bold tracking-tight text-foreground"
+             >
+               Focused Environment,<br/> Better Results.
+             </motion.h2>
+             <motion.p 
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.9 }}
+               className="mt-4 text-lg text-muted-foreground"
+             >
+               Join thousands of students optimizing their study time.
+             </motion.p>
+           </div>
+
+           {/* Floating badges for visual flair */}
+           <motion.div 
+             animate={{ y: [0, -10, 0] }}
+             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+             className="absolute bottom-12 left-12 flex items-center gap-3 rounded-2xl border bg-background/40 p-4 backdrop-blur-xl"
+           >
+             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/20 text-success">
+               <ShieldCheck className="h-5 w-5" />
+             </div>
+             <div>
+               <p className="text-xs font-bold uppercase text-muted-foreground">Trusted by</p>
+               <p className="text-sm font-bold text-foreground">15+ Universities</p>
+             </div>
+           </motion.div>
         </div>
 
-        <div className="rounded-2xl border bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
-          <h1 className="mb-1 text-2xl font-bold text-card-foreground">
-            {isSignup ? "Create an account" : "Welcome back"}
-          </h1>
-          <p className="mb-6 text-sm text-muted-foreground">
-            {isSignup ? "Sign up to start booking study spaces." : "Log in to manage your bookings."}
-          </p>
-
-          {/* Social login */}
-          <div className="mb-6 flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setError("Google Login Failed")}
-              useOneTap
-              theme="outline"
-              shape="pill"
-              text="continue_with"
-              width="100%"
-            />
-          </div>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or continue with email</span></div>
-          </div>
-
-          {error && (
-            <div className="mb-4 rounded-lg bg-destructive/15 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {isSignup && (
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-card-foreground">Full Name</label>
-                <input 
-                  type="text" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Jane Doe" 
-                  className="h-11 w-full rounded-xl border bg-background/80 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" 
-                />
-              </div>
-            )}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-card-foreground">Email or Student ID</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@university.edu" 
-                  className="h-11 w-full rounded-xl border bg-background/80 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" 
-                />
-              </div>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-card-foreground">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  className="h-11 w-full rounded-xl border bg-background/80 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all" 
-                />
-              </div>
-            </div>
-
-            <Button className="w-full group" size="lg" variant="hero" type="submit" disabled={isLoading}>
-              {isLoading ? "Please wait..." : (isSignup ? "Create Account" : "Log In")}
-              {!isLoading && <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />}
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button 
-              onClick={() => {
-                setIsSignup(!isSignup);
-                setError("");
-              }} 
-              className="font-medium text-primary hover:underline"
+        {/* Right Side: Form */}
+        <div className="flex w-full flex-col items-center justify-center px-6 lg:w-1/2">
+          <div className="w-full max-w-md">
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-10"
             >
-              {isSignup ? "Log in" : "Sign up"}
-            </button>
-          </p>
+              <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <Logo size="lg" />
+              </Link>
+            </motion.div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isSignup ? "signup" : "login"}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                    {isSignup ? "Start your journey" : "Welcome back"}
+                  </h1>
+                  <p className="mt-2 text-muted-foreground">
+                    {isSignup ? "Create an account to access premium features." : "Log in to your dashboard to manage your spots."}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <div className="w-full">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setError("Google Auth Failed")}
+                      useOneTap
+                      theme="outline"
+                      shape="pill"
+                      width="100%"
+                    />
+                  </div>
+                  
+                  <div className="relative flex items-center">
+                    <span className="w-full border-t" />
+                    <span className="bg-background px-3 text-xs uppercase text-muted-foreground">or email</span>
+                    <span className="w-full border-t" />
+                  </div>
+                </div>
+
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  {isSignup && (
+                    <div className="group space-y-1.5">
+                      <label className="text-sm font-semibold text-muted-foreground transition-colors group-focus-within:text-primary">Name</label>
+                      <div className="relative">
+                        <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <input 
+                          type="text" 
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Jane Doe" 
+                          className="h-12 w-full rounded-2xl border bg-muted/30 pl-11 pr-4 text-sm outline-none ring-primary/20 transition-all focus:border-primary focus:ring-4" 
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="group space-y-1.5">
+                    <label className="text-sm font-semibold text-muted-foreground transition-colors group-focus-within:text-primary">Email or ID</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <input 
+                        type="email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="name@university.edu" 
+                        className="h-12 w-full rounded-2xl border bg-muted/30 pl-11 pr-4 text-sm outline-none ring-primary/20 transition-all focus:border-primary focus:ring-4" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="group space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-semibold text-muted-foreground transition-colors group-focus-within:text-primary">Password</label>
+                      {!isSignup && <Link to="/login" className="text-xs text-primary hover:underline">Forgot password?</Link>}
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <input 
+                        type="password" 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••" 
+                        className="h-12 w-full rounded-2xl border bg-muted/30 pl-11 pr-4 text-sm outline-none ring-primary/20 transition-all focus:border-primary focus:ring-4" 
+                      />
+                    </div>
+                  </div>
+
+                  <Button className="w-full h-12 rounded-2xl group shadow-lg shadow-primary/20" variant="hero" type="submit" disabled={isLoading}>
+                    {isLoading ? "Verifying..." : (isSignup ? "Create free account" : "Log in to portal")}
+                    {!isLoading && <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />}
+                  </Button>
+                </form>
+
+                <p className="text-center text-sm text-muted-foreground">
+                  {isSignup ? "Already a member?" : "New to StudySpace?"}{" "}
+                  <button 
+                    onClick={() => { setIsSignup(!isSignup); setError(""); }} 
+                    className="font-bold text-primary hover:underline transition-all"
+                  >
+                    {isSignup ? "Sign in" : "Register now"}
+                  </button>
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
     </GoogleOAuthProvider>
   );
 }
