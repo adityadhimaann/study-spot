@@ -131,11 +131,19 @@ function RoomsPage() {
                             </span>
                           ))}
                         </div>
-                        <Button className="mt-4 w-full" size="sm" disabled={room.status === "booked"} asChild={room.status !== "booked"}>
-                          {room.status !== "booked" ? (
-                            <Link to="/booking" search={{ roomId: room._id }}>Book Now</Link>
-                          ) : "Unavailable"}
-                        </Button>
+                        {room.status !== "booked" ? (
+                          <Link 
+                            to="/booking" 
+                            search={{ roomId: room._id }}
+                            className="mt-4 inline-flex h-9 w-full items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                          >
+                            Book Now
+                          </Link>
+                        ) : (
+                          <Button className="mt-4 w-full" size="sm" disabled>
+                            Unavailable
+                          </Button>
+                        )}
                       </CardContent>
                     </Card>
                   </motion.div>

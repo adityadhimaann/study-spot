@@ -63,15 +63,19 @@ function LandingPage() {
                 Find and reserve the perfect study space in your library. Whether you need a quiet corner or a group room, we've got you covered.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Button variant="hero" size="lg" asChild className="group">
-                  <Link to="/login">
-                    Book Now
-                    <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Button>
-                <Button variant="hero-outline" size="lg" asChild>
-                  <Link to="/rooms">View Availability</Link>
-                </Button>
+                <Link 
+                  to="/login"
+                  className="group inline-flex h-11 items-center justify-center rounded-xl bg-primary px-8 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:scale-105 active:scale-95"
+                >
+                  Book Now
+                  <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+                <Link 
+                  to="/rooms"
+                  className="inline-flex h-11 items-center justify-center rounded-xl border-2 border-primary/20 bg-background/50 px-8 text-sm font-bold text-foreground backdrop-blur-sm transition-all hover:bg-primary/5 hover:border-primary/40 active:scale-95"
+                >
+                  View Availability
+                </Link>
               </div>
               <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex -space-x-2">
