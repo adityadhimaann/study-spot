@@ -116,7 +116,7 @@ function LandingPage() {
               <img 
                 src={heroImage} 
                 alt="Students studying in a modern library" 
-                className="w-full h-auto" 
+                className="w-full h-auto mix-blend-multiply dark:mix-blend-normal" 
               />
               
               {/* Floating availability badge */}
@@ -124,14 +124,14 @@ function LandingPage() {
                 initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 1, duration: 0.5 }}
-                className="absolute right-6 top-6 flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-3 shadow-xl backdrop-blur-md"
+                className="absolute right-6 top-6 flex items-center gap-3 rounded-2xl border border-primary/20 bg-white/80 p-3 shadow-xl backdrop-blur-md"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/20 text-success">
                   <CheckCircle className="h-6 w-6" />
                 </div>
                 <div className="pr-2 text-left">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/60">Live</div>
-                  <div className="text-sm font-extrabold text-white">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Live</div>
+                  <div className="text-sm font-extrabold text-slate-900">
                     {availableCount !== null ? `${availableCount} Rooms Free` : "12 Rooms Free"}
                   </div>
                 </div>
