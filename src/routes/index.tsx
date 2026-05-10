@@ -7,6 +7,8 @@ import { Link } from "@tanstack/react-router";
 import { Shield, Clock, Users, Wifi, CalendarCheck, MapPin, ArrowRight, Sparkles, Star, CheckCircle } from "lucide-react";
 import heroImage from "@/assets/hero-illustration.jpg";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { API_URL } from "@/lib/api-config";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -36,6 +38,18 @@ const testimonials = [
 ];
 
 function LandingPage() {
+  const [availableCount, setAvailableCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/rooms`)
+      .then(res => res.json())
+      .then(data => {
+        const count = Array.isArray(data) ? data.filter((r: any) => r.status === "available").length : 0;
+        setAvailableCount(count);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <LandingNav />
@@ -102,14 +116,28 @@ function LandingPage() {
               {/* Glass decorative background */}
               <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-primary/0 rounded-[3rem] blur-2xl opacity-50 group-hover:opacity-80 transition-opacity" />
               
-              <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/5 p-1 shadow-2xl backdrop-blur-sm">
+              <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/5 p-1 shadow-2xl backdrop-blur-md transition-all duration-500 hover:shadow-primary/20">
                 <img 
                   src={heroImage} 
                   alt="Students studying in a modern library" 
-                  width={1280} 
-                  height={800} 
-                  className="w-full h-full object-cover rounded-[2.2rem] mix-blend-multiply dark:brightness-110 dark:contrast-110" 
+                  className="w-full h-full object-cover rounded-[2.4rem] transition-transform duration-700 group-hover:scale-[1.03]" 
                 />
+                
+                {/* Floating availability badge */}
+                <motion.div 
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                  className="absolute right-6 top-6 flex items-center gap-3 rounded-2xl border border-white/20 bg-white/20 p-3 shadow-xl backdrop-blur-md transition-transform hover:scale-105"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/20 text-success shadow-inner">
+                    <CheckCircle className="h-6 w-6" />
+                  </div>
+                  <div className="pr-2">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/60">Real-time</div>
+                    <div className="text-sm font-extrabold text-white">{availableCount !== null ? `${availableCount} Rooms Free` : "Checking..."}</div>
+                  </div>
+                </motion.div>
               </div>
 
               {/* Floating badges for extra 'WOW' factor */}

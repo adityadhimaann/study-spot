@@ -4,8 +4,9 @@ import { DashboardTopbar } from "@/components/DashboardTopbar";
 import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/_app")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+  beforeLoad: ({ location }) => {
+    const isPublicPath = location.pathname === "/rooms";
+    if (typeof window !== "undefined" && !localStorage.getItem("token") && !isPublicPath) {
       throw redirect({
         to: "/login",
       });

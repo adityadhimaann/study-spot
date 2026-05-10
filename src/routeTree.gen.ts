@@ -9,23 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRoomsRouteImport } from './routes/_app.rooms'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppFloorMapRouteImport } from './routes/_app.floor-map'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppBookingsRouteImport } from './routes/_app.bookings'
 import { Route as AppBookingRouteImport } from './routes/_app.booking'
 
-const RoomsRoute = RoomsRouteImport.update({
-  id: '/rooms',
-  path: '/rooms',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -49,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoomsRoute = AppRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -81,24 +81,24 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/admin-login': typeof AdminLoginRoute
   '/login': typeof LoginRoute
-  '/rooms': typeof RoomsRoute
   '/booking': typeof AppBookingRoute
   '/bookings': typeof AppBookingsRoute
   '/dashboard': typeof AppDashboardRoute
   '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
+  '/rooms': typeof AppRoomsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/admin-login': typeof AdminLoginRoute
   '/login': typeof LoginRoute
-  '/rooms': typeof RoomsRoute
   '/booking': typeof AppBookingRoute
   '/bookings': typeof AppBookingsRoute
   '/dashboard': typeof AppDashboardRoute
   '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
+  '/rooms': typeof AppRoomsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,12 +107,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/admin-login': typeof AdminLoginRoute
   '/login': typeof LoginRoute
-  '/rooms': typeof RoomsRoute
   '/_app/booking': typeof AppBookingRoute
   '/_app/bookings': typeof AppBookingsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/floor-map': typeof AppFloorMapRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/rooms': typeof AppRoomsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,24 +121,24 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-login'
     | '/login'
-    | '/rooms'
     | '/booking'
     | '/bookings'
     | '/dashboard'
     | '/floor-map'
     | '/profile'
+    | '/rooms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/admin-login'
     | '/login'
-    | '/rooms'
     | '/booking'
     | '/bookings'
     | '/dashboard'
     | '/floor-map'
     | '/profile'
+    | '/rooms'
   id:
     | '__root__'
     | '/'
@@ -146,12 +146,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-login'
     | '/login'
-    | '/rooms'
     | '/_app/booking'
     | '/_app/bookings'
     | '/_app/dashboard'
     | '/_app/floor-map'
     | '/_app/profile'
+    | '/_app/rooms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -160,18 +160,10 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AdminLoginRoute: typeof AdminLoginRoute
   LoginRoute: typeof LoginRoute
-  RoomsRoute: typeof RoomsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/rooms': {
-      id: '/rooms'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof RoomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -206,6 +198,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/rooms': {
+      id: '/_app/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof AppRoomsRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -251,6 +250,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppFloorMapRoute: typeof AppFloorMapRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppRoomsRoute: typeof AppRoomsRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -259,6 +259,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppFloorMapRoute: AppFloorMapRoute,
   AppProfileRoute: AppProfileRoute,
+  AppRoomsRoute: AppRoomsRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -269,7 +270,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AdminLoginRoute: AdminLoginRoute,
   LoginRoute: LoginRoute,
-  RoomsRoute: RoomsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
