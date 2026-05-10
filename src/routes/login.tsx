@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { API_URL } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, ArrowRight, User, Sparkles, ShieldCheck } from "lucide-react";
+import { Mail, Lock, ArrowRight, User, Sparkles, ShieldCheck, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -122,7 +122,17 @@ function LoginPage() {
         </div>
 
         {/* Right Side: Form */}
-        <div className="flex w-full flex-col items-center justify-center px-6 lg:w-1/2">
+        <div className="relative flex w-full flex-col items-center justify-center px-6 lg:w-1/2">
+          {/* Back to Home Button */}
+          <div className="absolute top-6 right-6">
+            <Button variant="ghost" asChild className="gap-2 rounded-xl text-muted-foreground hover:text-foreground">
+              <Link to="/">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Website
+              </Link>
+            </Button>
+          </div>
+
           <div className="w-full max-w-md">
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
