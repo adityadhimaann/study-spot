@@ -1,0 +1,39 @@
+<svg
+  width="64"
+  height="64"
+  viewBox="0 0 64 64"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stopColor="#3B82F6" />
+      <stop offset="1" stopColor="#6366F1" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M30 18C30 18 24 14 14 14C12 14 10 14.5 10 14.5V44.5C10 44.5 12 44 14 44C24 44 30 48 30 48V18Z"
+    stroke="url(#logoGrad)"
+    strokeWidth="3.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+  <path
+    d="M34 18C34 18 40 14 50 14C52 14 54 14.5 54 14.5V44.5C54 44.5 52 44 50 44C40 44 34 48 34 48V18Z"
+    stroke="url(#logoGrad)"
+    strokeWidth="3.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+  <path d="M32 16V48" stroke="url(#logoGrad)" strokeWidth="3" strokeLinecap="round" />
+  <path d="M16 22H26" stroke="url(#logoGrad)" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+  <path d="M16 28H24" stroke="url(#logoGrad)" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+  <path d="M16 34H22" stroke="url(#logoGrad)" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+  <path d="M42 14L48 8" stroke="url(#logoGrad)" strokeWidth="3" strokeLinecap="round" />
+  <path d="M44 8L52 8L48 4Z" fill="url(#logoGrad)" />
+  <path d="M46 11L44 13" stroke="url(#logoGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+  <path d="M50 11L52 13" stroke="url(#logoGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+  <path d="M48 10V13" stroke="url(#logoGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+</svg>

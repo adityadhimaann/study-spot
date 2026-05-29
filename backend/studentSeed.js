@@ -40,11 +40,11 @@ const seedStudentsAndBookings = async () => {
 
     // Create bookings
     await Booking.insertMany([
-      { user: students[0]._id, room: rooms[0]._id, date: today, slot: '10:00', status: 'completed' },
-      { user: students[1]._id, room: rooms[1]._id, date: today, slot: '14:00', status: 'upcoming' },
-      { user: students[2]._id, room: rooms[3]._id, date: tomorrow, slot: '09:00', status: 'upcoming' },
-      { user: students[3]._id, room: rooms[4]._id, date: tomorrow, slot: '15:00', status: 'cancelled' },
-      { user: students[0]._id, room: rooms[2]._id, date: tomorrow, slot: '11:00', status: 'upcoming' }
+      { user: students[0]._id, room: rooms[0 % rooms.length]._id, date: today, slot: '10:00', status: 'completed' },
+      { user: students[1]._id, room: rooms[1 % rooms.length]._id, date: today, slot: '14:00', status: 'upcoming' },
+      { user: students[2]._id, room: rooms[3 % rooms.length]._id, date: tomorrow, slot: '09:00', status: 'upcoming' },
+      { user: students[3]._id, room: rooms[4 % rooms.length]._id, date: tomorrow, slot: '15:00', status: 'cancelled' },
+      { user: students[0]._id, room: rooms[2 % rooms.length]._id, date: tomorrow, slot: '11:00', status: 'upcoming' }
     ]);
 
     console.log('Successfully seeded students and their bookings!');

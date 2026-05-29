@@ -3,6 +3,7 @@ import { API_URL } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
 import { Mail, Lock, ArrowRight, User, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
@@ -79,11 +80,11 @@ function LoginPage() {
     }
   };
 
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "39962002042-acubos9hbsrj9qsce5ptl86n59h12181.apps.googleusercontent.com";
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "343096565644-j7g71nk3hitaieoic2o4hv01e6a9kn6s.apps.googleusercontent.com";
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
-      <div className="relative flex min-h-screen w-full overflow-hidden bg-[#060614]">
+      <div className="relative flex min-h-screen w-full overflow-hidden bg-slate-50 dark:bg-[#060614]">
 
         {/* ── Ambient background glows ── */}
         <div className="pointer-events-none absolute inset-0 z-0">
@@ -114,13 +115,13 @@ function LoginPage() {
             <motion.div
               animate={{ y: [0, -12, 0], rotateX: [0, 5, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-16 left-8 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl shadow-2xl"
+              className="absolute top-16 left-8 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 p-4 backdrop-blur-xl shadow-2xl"
             >
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-emerald-500/30 flex items-center justify-center text-lg">📚</div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Available Now</p>
-                  <p className="text-sm font-bold text-white">12 Rooms Free</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Available Now</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">12 Rooms Free</p>
                 </div>
               </div>
             </motion.div>
@@ -129,13 +130,13 @@ function LoginPage() {
             <motion.div
               animate={{ y: [0, 10, 0], rotateX: [0, -3, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute bottom-24 right-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl shadow-2xl"
+              className="absolute bottom-24 right-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 p-4 backdrop-blur-xl shadow-2xl"
             >
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-primary/30 flex items-center justify-center text-lg">⚡</div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Booking</p>
-                  <p className="text-sm font-bold text-white">Under 30 seconds</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Booking</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">Under 30 seconds</p>
                 </div>
               </div>
             </motion.div>
@@ -157,7 +158,7 @@ function LoginPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="mt-4 text-base font-medium text-white/50"
+                className="mt-4 text-base font-medium text-white/80 dark:text-white/50"
               >
                 The smarter way to study.
               </motion.p>
@@ -169,8 +170,9 @@ function LoginPage() {
         <div className="relative z-10 flex w-full flex-col items-center justify-center px-6 py-12 lg:w-[52%]">
 
           {/* Back button */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="absolute top-8 right-8">
-            <Button variant="ghost" asChild className="group gap-2 rounded-full border border-white/10 bg-white/5 px-5 text-white/60 backdrop-blur-sm hover:bg-white/10 hover:text-white">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="absolute top-8 right-8 flex items-center gap-4">
+            <ThemeToggle />
+            <Button variant="ghost" asChild className="group gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 px-5 text-slate-600 dark:text-white/60 backdrop-blur-sm hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white">
               <Link to="/"><ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Home</Link>
             </Button>
           </motion.div>
@@ -196,11 +198,11 @@ function LoginPage() {
                     <motion.h1
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-3xl font-black tracking-tighter text-white"
+                      className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white"
                     >
                       {isSignup ? "Join StudySpace" : "Welcome Back"}
                     </motion.h1>
-                    <p className="mt-2 text-sm font-medium text-white/40">
+                    <p className="mt-2 text-sm font-medium text-slate-500 dark:text-white/40">
                       {isSignup ? "Create your account and start booking instantly." : "Sign in to access your dashboard and bookings."}
                     </p>
                   </div>
@@ -219,9 +221,9 @@ function LoginPage() {
 
                   {/* Divider */}
                   <div className="relative mb-6 flex items-center">
-                    <div className="flex-grow border-t border-white/10" />
-                    <span className="mx-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30">or continue with email</span>
-                    <div className="flex-grow border-t border-white/10" />
+                    <div className="flex-grow border-t border-slate-200 dark:border-white/10" />
+                    <span className="mx-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/30">or continue with email</span>
+                    <div className="flex-grow border-t border-slate-200 dark:border-white/10" />
                   </div>
 
                   {/* Error */}
@@ -240,24 +242,24 @@ function LoginPage() {
                   <form className="space-y-4" onSubmit={handleSubmit}>
                     {isSignup && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="relative">
-                        <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                        <User className="absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-white/60" />
                         <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Full Name"
-                          className="h-13 w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-3.5 text-sm font-semibold text-white placeholder:text-white/25 outline-none transition-all focus:border-primary/50 focus:bg-white/8 focus:ring-4 focus:ring-primary/10 backdrop-blur-sm" />
+                          className="h-13 w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 outline-none transition-all focus:border-primary/50 focus:bg-slate-50 dark:focus:bg-white/8 focus:ring-4 focus:ring-primary/10 backdrop-blur-sm" />
                       </motion.div>
                     )}
 
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                      <Mail className="absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-white/60" />
                       <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address"
-                        className="h-13 w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-3.5 text-sm font-semibold text-white placeholder:text-white/25 outline-none transition-all focus:border-primary/50 focus:bg-white/8 focus:ring-4 focus:ring-primary/10 backdrop-blur-sm" />
+                        className="h-13 w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 outline-none transition-all focus:border-primary/50 focus:bg-slate-50 dark:focus:bg-white/8 focus:ring-4 focus:ring-primary/10 backdrop-blur-sm" />
                     </div>
 
                     <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                      <Lock className="absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-white/60" />
                       <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Password"
-                        className="h-13 w-full rounded-2xl border border-white/10 bg-white/5 pl-11 pr-4 py-3.5 text-sm font-semibold text-white placeholder:text-white/25 outline-none transition-all focus:border-primary/50 focus:bg-white/8 focus:ring-4 focus:ring-primary/10 backdrop-blur-sm" />
+                        className="h-13 w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 outline-none transition-all focus:border-primary/50 focus:bg-slate-50 dark:focus:bg-white/8 focus:ring-4 focus:ring-primary/10 backdrop-blur-sm" />
                       {!isSignup && (
-                        <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-wider text-primary hover:text-primary/70">Forgot?</button>
+                        <button type="button" className="absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[10px] font-black uppercase tracking-wider text-primary hover:text-primary/70">Forgot?</button>
                       )}
                     </div>
 
@@ -272,7 +274,7 @@ function LoginPage() {
                     </button>
                   </form>
 
-                  <p className="mt-6 text-center text-sm font-medium text-white/30">
+                  <p className="mt-6 text-center text-sm font-medium text-slate-500 dark:text-white/30">
                     {isSignup ? "Already a member? " : "New to StudySpace? "}
                     <button onClick={() => { setIsSignup(!isSignup); setError(""); }}
                       className="font-black text-primary transition-colors hover:text-violet-400"
