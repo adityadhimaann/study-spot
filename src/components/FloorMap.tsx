@@ -120,27 +120,97 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
     }
   };
 
+  const renderFurniture = (room: Room) => {
+    const furniture: JSX.Element[] = [];
+    
+    if (room.type === "quiet") {
+      const pad = 16;
+      const deskW = 16;
+      const deskH = 12;
+      
+      // Top-Left desk
+      furniture.push(
+        <g key="carrel-1" className="stroke-indigo-500/20 fill-none" strokeWidth={0.7}>
+          <rect x={room.x + pad} y={room.y + pad} width={deskW} height={deskH} rx={1} />
+          <circle cx={room.x + pad + deskW/2} cy={room.y + pad + deskH + 4} r={2} className="stroke-indigo-500/30" />
+        </g>
+      );
+      
+      // Top-Right desk
+      furniture.push(
+        <g key="carrel-2" className="stroke-indigo-500/20 fill-none" strokeWidth={0.7}>
+          <rect x={room.x + room.w - pad - deskW} y={room.y + pad} width={deskW} height={deskH} rx={1} />
+          <circle cx={room.x + room.w - pad - deskW/2} cy={room.y + pad + deskH + 4} r={2} className="stroke-indigo-500/30" />
+        </g>
+      );
+
+      // Bottom-Right desk
+      furniture.push(
+        <g key="carrel-3" className="stroke-indigo-500/20 fill-none" strokeWidth={0.7}>
+          <rect x={room.x + room.w - pad - deskW} y={room.y + room.h - pad - deskH} width={deskW} height={deskH} rx={1} />
+          <circle cx={room.x + room.w - pad - deskW/2} cy={room.y + room.h - pad - deskH - 4} r={2} className="stroke-indigo-500/30" />
+        </g>
+      );
+    } else {
+      const tblW = room.w * 0.45;
+      const tblH = room.h * 0.35;
+      const tblX = room.x + (room.w - tblW) / 2;
+      const tblY = room.y + (room.h - tblH) / 2;
+      
+      furniture.push(
+        <g key="group-furniture" className="stroke-indigo-500/20 fill-none" strokeWidth={0.8}>
+          <rect x={tblX} y={tblY} width={tblW} height={tblH} rx={tblH/2} className="fill-indigo-500/5 stroke-indigo-500/20" />
+          <circle cx={tblX + tblW*0.25} cy={tblY - 4} r={2.5} className="stroke-indigo-500/30" />
+          <circle cx={tblX + tblW*0.5} cy={tblY - 4} r={2.5} className="stroke-indigo-500/30" />
+          <circle cx={tblX + tblW*0.75} cy={tblY - 4} r={2.5} className="stroke-indigo-500/30" />
+          <circle cx={tblX + tblW*0.25} cy={tblY + tblH + 4} r={2.5} className="stroke-indigo-500/30" />
+          <circle cx={tblX + tblW*0.5} cy={tblY + tblH + 4} r={2.5} className="stroke-indigo-500/30" />
+          <circle cx={tblX + tblW*0.75} cy={tblY + tblH + 4} r={2.5} className="stroke-indigo-500/30" />
+          <circle cx={tblX - 4} cy={tblY + tblH/2} r={2.5} className="stroke-indigo-500/30" />
+          <circle cx={tblX + tblW + 4} cy={tblY + tblH/2} r={2.5} className="stroke-indigo-500/30" />
+        </g>
+      );
+    }
+    
+    return furniture;
+  };
+
   const filteredRooms = selectedFloor === "all" ? liveRooms : liveRooms.filter((r) => r.floor === selectedFloor);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-1 bg-muted/40 p-1 rounded-2xl border w-fit backdrop-blur-sm shadow-sm">
         {["all", "1st", "2nd", "3rd"].map((f) => (
           <button
             key={f}
             onClick={() => setSelectedFloor(f)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-              selectedFloor === f ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-accent"
+              "rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300",
+              selectedFloor === f 
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
             )}
           >
-            {f === "all" ? "All Floors" : `${f} Floor`}
+            {f === "all" ? "🌐 All Floors" : `🏢 ${f} Floor`}
           </button>
         ))}
       </div>
 
-      <div className="relative overflow-hidden rounded-xl border bg-[#080812] text-white">
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-500/15 bg-[#080812] text-white shadow-2xl">
         <svg viewBox="0 0 440 400" className="w-full h-auto max-w-2xl mx-auto aspect-[1.1]">
+          {/* Custom SVG CSS Animations */}
+          <style>{`
+            @keyframes walkwayFlow {
+              to {
+                stroke-dashoffset: -20;
+              }
+            }
+            .animated-walkway {
+              stroke-dasharray: 6 4;
+              animation: walkwayFlow 2s linear infinite;
+            }
+          `}</style>
+
           {/* Blueprint SVG Gradients Definitions */}
           <defs>
             <linearGradient id="grad-available" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -165,15 +235,36 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
             <line key={`h${i}`} x1={0} y1={i * 22} x2={440} y2={i * 22} className="stroke-indigo-500/10" strokeWidth={0.5} />
           ))}
 
-          {/* Hallway Walkway Guideline paths */}
-          <g className="stroke-indigo-400/20 fill-none" strokeWidth={1} strokeDasharray="3 3">
+          {/* Hallway Walkway Guideline paths (Flowing laser track) */}
+          <g className="stroke-indigo-400/25 fill-none animated-walkway" strokeWidth={1.2}>
             <line x1={20} y1={130} x2={420} y2={130} />
             <line x1={20} y1={270} x2={420} y2={270} />
             <line x1={148} y1={20} x2={148} y2={380} />
             <line x1={288} y1={20} x2={288} y2={380} />
           </g>
 
-          {/* Lobby Entrance, Elevator, Stairs structural elements */}
+          {/* Restrooms Block (Detailed with sinks/toilets) */}
+          <g className="fill-indigo-500/5 stroke-indigo-500/25" strokeWidth={0.8}>
+            <rect x={180} y={5} width={80} height={22} rx={4} />
+            <line x1={220} y1={5} x2={220} y2={27} className="stroke-indigo-500/15" />
+            {/* Sinks */}
+            <circle cx={194} cy={10} r={2} className="stroke-indigo-500/20" />
+            <circle cx={206} cy={10} r={2} className="stroke-indigo-500/20" />
+            {/* Toilets */}
+            <rect x={228} y={8} width={8} height={10} rx={1} className="stroke-indigo-500/20" />
+            <rect x={244} y={8} width={8} height={10} rx={1} className="stroke-indigo-500/20" />
+            <text x={220} y={20} textAnchor="middle" className="fill-indigo-400/80 text-[6px] font-black tracking-widest uppercase">RESTROOMS 🚻</text>
+          </g>
+
+          {/* Lobby Entrance Info Desk (Curved architectural table) */}
+          <g className="fill-indigo-500/5 stroke-indigo-500/25" strokeWidth={1}>
+            <path d="M 180 395 Q 220 380 260 395" className="fill-none stroke-indigo-400" strokeWidth={2} />
+            <circle cx={205} cy={392} r={2} className="fill-indigo-500/25 stroke-indigo-500/20" />
+            <circle cx={235} cy={392} r={2} className="fill-indigo-500/25 stroke-indigo-500/20" />
+            <text x={220} y={375} textAnchor="middle" className="fill-indigo-400 text-[7px] font-black tracking-widest">INFO & RECEPTION</text>
+          </g>
+
+          {/* Stairwell and Elevator Bay structural elements */}
           <g className="fill-indigo-500/5 stroke-indigo-500/25" strokeWidth={1}>
             {/* Stairwell */}
             <rect x={20} y={5} width={70} height={22} rx={4} />
@@ -231,8 +322,11 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                   fill={roomGradient}
                   className={cn(colors.stroke, "transition-all duration-300")}
                   strokeWidth={isHovered ? 2.5 : 1.5}
-                  style={{ filter: isHovered ? "drop-shadow(0 0 12px rgba(99,102,241,0.35))" : undefined }}
+                  style={{ filter: isHovered ? "drop-shadow(0 0 16px rgba(99,102,241,0.4))" : undefined }}
                 />
+
+                {/* Vector Room Furniture (Visual blueprint desks & tables) */}
+                {renderFurniture(room)}
 
                 {/* Architectural Door Swings */}
                 <g className="transition-opacity duration-200">
@@ -282,14 +376,6 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                 >
                   Cap: {room.capacity} · {colors.label}
                 </text>
-
-                {/* Pulsing Active Beacon Dots */}
-                {room.status === "available" && (
-                  <circle cx={room.x + room.w - 12} cy={room.y + 12} r={3.5} className="fill-emerald-400 animate-pulse" />
-                )}
-                {room.status === "almost-full" && (
-                  <circle cx={room.x + room.w - 12} cy={room.y + 12} r={3.5} className="fill-amber-400 animate-pulse" />
-                )}
               </g>
             );
           })}
@@ -316,7 +402,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-bold text-white uppercase tracking-wider">{room.name}</p>
-                          <Badge variant={room.status === "available" ? "success" : room.status === "almost-full" ? "warning" : "destructive"} className="text-[9px] px-1.5 py-0.25">
+                          <Badge variant={room.status === "available" ? "default" : "destructive"} className="text-[9px] px-1.5 py-0.25">
                             {colors.label}
                           </Badge>
                         </div>
@@ -385,11 +471,12 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-center gap-4 rounded-2xl border bg-card/40 p-3 text-xs text-muted-foreground backdrop-blur-sm">
+        <span className="font-bold text-foreground mr-1 uppercase tracking-wider text-[10px]">Room Status:</span>
         {Object.entries(statusColors).map(([key, val]) => (
-          <div key={key} className="flex items-center gap-1.5">
-            <span className={cn("h-2.5 w-2.5 rounded-full", val.dot)} />
-            <span>{val.label}</span>
+          <div key={key} className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
+            <span className={cn("h-2 w-2 rounded-full", val.dot, key === "available" || key === "almost-full" ? "animate-pulse" : "")} />
+            <span className="text-foreground/80">{val.label}</span>
           </div>
         ))}
       </div>
