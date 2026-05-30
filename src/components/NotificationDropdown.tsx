@@ -83,7 +83,7 @@ export function NotificationDropdown() {
                 <h3 className="text-sm font-semibold text-card-foreground">Notifications</h3>
                 <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
               </div>
-              <div className="max-h-72 overflow-y-auto">
+              <div className="max-h-72 overflow-y-auto" data-lenis-prevent>
                 {notifications.length === 0 && (
                   <div className="p-4 text-center text-sm text-muted-foreground">No notifications</div>
                 )}

@@ -4,6 +4,7 @@ import { DashboardTopbar } from "@/components/DashboardTopbar";
 import { Toaster } from "@/components/ui/sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ location }) => {
