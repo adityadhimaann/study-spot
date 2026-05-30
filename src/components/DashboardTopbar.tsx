@@ -66,21 +66,6 @@ export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
       style={{ left: leftOffset }}
     >
       <div className="flex items-center gap-4">
-        {isMobile && (
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-60 border-none">
-              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-              <div className="h-full">
-                <AppSidebar forceShow onItemClick={() => setMenuOpen(false)} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        )}
         <div className="flex flex-col min-w-0">
           <h1 className="text-base sm:text-lg font-bold leading-tight text-foreground whitespace-nowrap">{title}</h1>
           <p className="text-xs text-muted-foreground hidden sm:block">{subtitle}</p>

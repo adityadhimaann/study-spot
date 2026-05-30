@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useState } from "react";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ location }) => {
@@ -17,8 +19,6 @@ export const Route = createFileRoute("/_app")({
   },
   component: AppLayout,
 });
-
-import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 function AppLayout() {
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
@@ -36,7 +36,7 @@ function AppLayout() {
         style={{ marginLeft: leftMargin }}
       >
         <DashboardTopbar collapsed={collapsed} />
-        <main className="flex-1 p-4 md:p-6 pt-20 md:pt-24 overflow-x-hidden">
+        <main className="flex-1 p-4 md:p-6 pt-20 md:pt-24 pb-20 md:pb-6 overflow-x-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentPath}
@@ -51,6 +51,7 @@ function AppLayout() {
         </main>
       </div>
       <FeedbackWidget />
+      <MobileBottomNav />
       <Toaster position="bottom-right" />
     </div>
   );
