@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useState } from "react";
-import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 export const Route = createFileRoute("/_app")({
@@ -50,7 +49,6 @@ function AppLayout() {
           </AnimatePresence>
         </main>
       </div>
-      <FeedbackWidget />
       <MobileBottomNav />
       <Toaster position="bottom-right" />
     </div>
