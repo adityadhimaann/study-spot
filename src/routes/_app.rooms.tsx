@@ -49,32 +49,34 @@ function RoomsPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search rooms..."
-                className="h-9 w-48 rounded-lg border bg-muted/40 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            {(["all", "quiet", "group"] as RoomType[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setFilter(t)}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                  filter === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-accent"
-                )}
-              >
-                {t === "all" ? "All" : t === "quiet" ? "Quiet" : "Group"}
-              </button>
-            ))}
-          </div>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search rooms..."
+            className="h-9 w-full rounded-xl border bg-muted/40 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+          />
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mr-1">
+            <Filter className="h-3.5 w-3.5" /> Filter:
+          </span>
+          {(["all", "quiet", "group"] as RoomType[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setFilter(t)}
+              className={cn(
+                "rounded-xl px-3 py-1.5 text-xs font-medium transition-all",
+                filter === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/60 text-muted-foreground hover:bg-accent"
+              )}
+            >
+              {t === "all" ? "All Spaces" : t === "quiet" ? "Quiet Zones" : "Group Rooms"}
+            </button>
+          ))}
+        </div>
+      </div>
 
         {isLoading ? (
           <div className="flex h-40 items-center justify-center">

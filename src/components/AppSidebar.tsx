@@ -14,21 +14,34 @@ const navItems = [
   { label: "Profile", to: "/profile", icon: User },
 ];
 
-export function AppSidebar({ forceShow = false }: { forceShow?: boolean }) {
-  const [collapsed, setCollapsed] = useState(false);
+export function AppSidebar({ 
+  collapsed, 
+  setCollapsed, 
+  forceShow = false 
+}: { 
+  collapsed?: boolean; 
+  setCollapsed?: (c: boolean) => void; 
+  forceShow?: boolean; 
+}) {
+  const [localCollapsed, setLocalCollapsed] = useState(false);
+  const isCollapsed = collapsed !== undefined ? collapsed : localCollapsed;
+
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <>
-      {/* Sidebar for Desktop */}
+      {/* Sidebar for Desktop / Mobile */}
       <aside className={cn(
-        "fixed top-0 left-0 z-50 h-screen flex-col border-r bg-sidebar/80 backdrop-blur-xl transition-all duration-300 md:flex",
-        collapsed ? "w-[68px]" : "w-60",
-        forceShow ? "flex relative h-full w-full border-none bg-transparent" : "hidden"
+        "flex flex-col bg-sidebar transition-all duration-300",
+        // Desktop layouts
+        !forceShow && "fixed top-0 left-0 z-30 h-screen border-r bg-sidebar/80 backdrop-blur-xl hidden md:flex",
+        !forceShow && (isCollapsed ? "w-[68px]" : "w-60"),
+        // Mobile drawer layout
+        forceShow && "h-full w-full bg-sidebar border-none"
       )}>
         <div className="flex h-16 items-center border-b px-4">
           <Link to="/" className="hover:opacity-80 transition-opacity">
-            <Logo size="md" showText={!collapsed} />
+            <Logo size="md" showText={!isCollapsed} />
           </Link>
         </div>
 
@@ -47,8 +60,8 @@ export function AppSidebar({ forceShow = false }: { forceShow?: boolean }) {
                 )}
               >
                 <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110", active && "text-primary")} />
-                {!collapsed && <span>{item.label}</span>}
-                {active && !collapsed && (
+                {!isCollapsed && <span>{item.label}</span>}
+                {active && !isCollapsed && (
                   <motion.div
                     layoutId="sidebar-active"
                     className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
@@ -69,16 +82,22 @@ export function AppSidebar({ forceShow = false }: { forceShow?: boolean }) {
             className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-all hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover:scale-110" />
-            {!collapsed && <span>Log out</span>}
+            {!isCollapsed && <span>Log out</span>}
           </button>
           {!forceShow && (
             <Button
               variant="ghost"
               size="icon"
               className="mx-auto flex"
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() => {
+                if (setCollapsed) {
+                  setCollapsed(!isCollapsed);
+                } else {
+                  setLocalCollapsed(!isCollapsed);
+                }
+              }}
             >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </Button>
           )}
         </div>

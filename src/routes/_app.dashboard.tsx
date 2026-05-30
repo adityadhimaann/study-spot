@@ -151,7 +151,7 @@ function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }}>
             <Card className="group border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -198,7 +198,7 @@ function DashboardPage() {
         </motion.div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Recommendations */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm h-full">
@@ -228,7 +228,7 @@ function DashboardPage() {
         </motion.div>
 
         {/* Weekly Usage */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="xl:col-span-2">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2">
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm h-full">
             <CardContent className="p-6">
               <div className="mb-4 flex items-center justify-between">

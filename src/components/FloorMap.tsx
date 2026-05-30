@@ -135,8 +135,8 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         ))}
       </div>
 
-      <div className="relative overflow-auto rounded-xl border bg-card/50 backdrop-blur-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <svg viewBox="0 0 440 400" className="min-w-[800px] md:min-w-[1000px] h-[600px] md:h-[800px] w-full">
+      <div className="relative overflow-hidden rounded-xl border bg-card/50 backdrop-blur-sm">
+        <svg viewBox="0 0 440 400" className="w-full h-auto max-w-2xl mx-auto aspect-[1.1]">
           {/* Grid lines */}
           {Array.from({ length: 20 }).map((_, i) => (
             <line key={`g${i}`} x1={i * 22} y1={0} x2={i * 22} y2={400} className="stroke-border/30" strokeWidth={0.5} />

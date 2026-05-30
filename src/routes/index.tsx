@@ -68,15 +68,15 @@ function LandingPage() {
       {/* ─── HERO ─────────────────────────────────────────────── */}
       <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden bg-[#050510]">
         {/* Animated background orbs */}
-        <div className="absolute inset-0 z-0">
-          <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-primary/30 blur-[140px]" />
-          <motion.div animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.5, 0.2] }} transition={{ duration: 10, repeat: Infinity, delay: 2 }} className="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] rounded-full bg-violet-600/25 blur-[160px]" />
-          <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 12, repeat: Infinity, delay: 4 }} className="absolute top-[40%] left-[50%] w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[120px]" />
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-primary/30 blur-[140px] will-change-transform" />
+          <motion.div animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.5, 0.2] }} transition={{ duration: 10, repeat: Infinity, delay: 2 }} className="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] rounded-full bg-violet-600/25 blur-[160px] will-change-transform" />
+          <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 12, repeat: Infinity, delay: 4 }} className="absolute top-[40%] left-[50%] w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[120px] will-change-transform" />
           {/* Grid pattern */}
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M0%200h60v60H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M0%200v60M60%200v60M0%200h60M0%2060h60%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.03)%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E')] opacity-60" />
         </div>
 
-        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 mx-auto max-w-7xl w-full px-6 py-24 lg:py-32">
+        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 mx-auto max-w-7xl w-full px-6 py-24 lg:py-32 will-change-transform">
           <div className="grid items-center gap-16 lg:grid-cols-2">
             {/* Left: Text */}
             <div>
@@ -236,9 +236,9 @@ function LandingPage() {
 
       {/* ─── CTA ──────────────────────────────────────────────── */}
       <section id="about" className="relative overflow-hidden bg-[#050510] py-32">
-        <div className="absolute inset-0">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-violet-600/10 to-transparent" />
-          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/20 blur-[120px] rounded-full" />
+          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/20 blur-[120px] rounded-full will-change-transform" />
         </div>
         <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>

@@ -10,7 +10,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 
 import { useState, useEffect } from "react";
 
-export function DashboardTopbar() {
+export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
   const [user, setUser] = useState<{name?: string} | null>(null);
 
   useEffect(() => {
@@ -58,10 +58,10 @@ export function DashboardTopbar() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const leftOffset = isMobile 
     ? "0px" 
-    : (typeof window !== 'undefined' && document.querySelector('aside')?.classList.contains('w-[68px]') ? '68px' : '240px');
+    : (collapsed ? '68px' : '240px');
 
   return (
-    <header className="fixed top-0 right-0 z-40 flex h-16 items-center justify-between border-b bg-background/60 px-6 backdrop-blur-xl transition-all duration-300" 
+    <header className="fixed top-0 right-0 z-45 flex h-16 items-center justify-between border-b bg-background/60 px-6 backdrop-blur-xl transition-all duration-300" 
       style={{ left: leftOffset }}
     >
       <div className="flex items-center gap-4">

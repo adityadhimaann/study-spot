@@ -22,17 +22,19 @@ import { FeedbackWidget } from "@/components/FeedbackWidget";
 function AppLayout() {
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const [collapsed, setCollapsed] = useState(false);
+
   const leftMargin = isMobile 
     ? "0px" 
-    : (typeof window !== 'undefined' && document.querySelector('aside')?.classList.contains('w-[68px]') ? '68px' : '240px');
+    : (collapsed ? '68px' : '240px');
 
   return (
     <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
-      <AppSidebar />
+      <AppSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className="flex flex-1 flex-col transition-all duration-300"
         style={{ marginLeft: leftMargin }}
       >
-        <DashboardTopbar />
+        <DashboardTopbar collapsed={collapsed} />
         <main className="flex-1 p-4 md:p-6 pt-20 md:pt-24 overflow-x-hidden">
           <AnimatePresence mode="wait">
             <motion.div
