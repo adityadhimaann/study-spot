@@ -81,8 +81,8 @@ export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
             </SheetContent>
           </Sheet>
         )}
-        <div className="flex flex-col">
-          <h1 className="text-lg font-bold leading-tight text-foreground">{title}</h1>
+        <div className="flex flex-col min-w-0">
+          <h1 className="text-base sm:text-lg font-bold leading-tight text-foreground whitespace-nowrap">{title}</h1>
           <p className="text-xs text-muted-foreground hidden sm:block">{subtitle}</p>
         </div>
         <div className="relative hidden md:block">
