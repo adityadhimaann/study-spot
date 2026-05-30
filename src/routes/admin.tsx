@@ -77,25 +77,39 @@ function AdminPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    
+    if (!token) {
+      window.location.href = "/admin-login";
+      return;
+    }
+
+    const handleResponse = async (res: Response) => {
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/admin-login";
+        throw new Error("Unauthorized");
+      }
+      return res.json();
+    };
+
     fetch(`${API_URL}/api/admin/bookings`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(handleResponse)
       .then(data => setBookings(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
 
     fetch(`${API_URL}/api/admin/stats`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(handleResponse)
       .then(data => setStatsData(data))
       .catch(err => console.error(err));
 
     fetch(`${API_URL}/api/admin/users`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(handleResponse)
       .then(data => setUsers(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
       
@@ -107,12 +121,12 @@ function AdminPage() {
     fetch(`${API_URL}/api/admin/feedback`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(handleResponse)
       .then(data => setFeedbackItems(Array.isArray(data) ? data : []))
       .catch(err => console.error(err));
   }, []);
 
-  const adminStatsMap = statsData ? [
+  const adminStatsMap = statsData && Array.isArray(statsData.adminStats) ? [
     { label: "Total Bookings", value: statsData.adminStats.find(s => s.label === "Total Bookings")?.value || "0", icon: BookMarked, trend: "+12%", bg: "bg-primary/10", color: "text-primary" },
     { label: "Active Rooms", value: statsData.adminStats.find(s => s.label === "Active Rooms")?.value || "0", icon: Building, trend: "+2", bg: "bg-success/10", color: "text-success" },
     { label: "Today's Bookings", value: statsData.adminStats.find(s => s.label === "Today's Bookings")?.value || "0", icon: CalendarDays, trend: "+5", bg: "bg-warning/10", color: "text-warning" },
