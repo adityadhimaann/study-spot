@@ -17,11 +17,13 @@ const navItems = [
 export function AppSidebar({ 
   collapsed, 
   setCollapsed, 
-  forceShow = false 
+  forceShow = false,
+  onItemClick
 }: { 
   collapsed?: boolean; 
   setCollapsed?: (c: boolean) => void; 
   forceShow?: boolean; 
+  onItemClick?: () => void;
 }) {
   const [localCollapsed, setLocalCollapsed] = useState(false);
   const isCollapsed = collapsed !== undefined ? collapsed : localCollapsed;
@@ -52,6 +54,7 @@ export function AppSidebar({
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={onItemClick}
                 className={cn(
                   "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   active

@@ -55,6 +55,7 @@ export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
     subtitle = "Manage your account and preferences.";
   }
 
+  const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const leftOffset = isMobile 
     ? "0px" 
@@ -66,7 +67,7 @@ export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
     >
       <div className="flex items-center gap-4">
         {isMobile && (
-          <Sheet>
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
@@ -75,8 +76,7 @@ export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
             <SheetContent side="left" className="p-0 w-60 border-none">
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               <div className="h-full">
-                {/* We can pass a prop to sidebar to tell it it's in mobile mode if needed, but for now it works as is */}
-                <AppSidebar forceShow />
+                <AppSidebar forceShow onItemClick={() => setMenuOpen(false)} />
               </div>
             </SheetContent>
           </Sheet>
