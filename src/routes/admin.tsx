@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, CalendarDays, BookMarked, Building, TrendingUp, BarChart3, Clock, LogOut, Bell, CheckCircle } from "lucide-react";
+import { Users, CalendarDays, BookMarked, Building, TrendingUp, BarChart3, Clock, LogOut, Bell, CheckCircle, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Logo } from "@/components/Logo";
@@ -72,6 +72,10 @@ function AdminPage() {
   const [feedbackItems, setFeedbackItems] = useState<any[]>([]);
   const [newRoom, setNewRoom] = useState({ name: '', type: 'quiet', capacity: 1, floor: '1st', amenities: 'Wi-Fi' });
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Advanced bookings table search and category filtering
+  const [bookingSearchQuery, setBookingSearchQuery] = useState("");
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<"all" | "pending" | "completed" | "cancelled">("all");
 
   const upcomingBookings = bookings.filter(b => b.status === "upcoming");
 
@@ -373,56 +377,196 @@ function AdminPage() {
         </motion.div>
       </div>
 
-      {/* Bookings Table */}
-      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardContent className="p-6">
-          <h2 className="mb-4 text-lg font-semibold text-card-foreground">All Bookings</h2>
-          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-3 font-medium">User</th>
-                  <th className="pb-3 font-medium">Room</th>
-                  <th className="pb-3 font-medium">Date</th>
-                  <th className="pb-3 font-medium">Time</th>
-                  <th className="pb-3 font-medium">Status</th>
-                  <th className="pb-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.length === 0 ? (
-                  <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">No bookings found.</td></tr>
-                ) : bookings.map((b) => (
-                  <tr key={b._id} className="border-b last:border-0 transition-colors hover:bg-accent/30">
-                    <td className="py-3 font-medium text-card-foreground">
-                      {b.user?.name || "Unknown User"} <span className="block text-xs text-muted-foreground">{b.user?.email}</span>
-                    </td>
-                    <td className="py-3 text-muted-foreground">{b.room?.name || "Unknown Room"}</td>
-                    <td className="py-3 text-muted-foreground">{b.date}</td>
-                    <td className="py-3 text-muted-foreground">{b.slot}</td>
-                    <td className="py-3 flex items-center gap-2">
-                      <Badge variant={b.status === "completed" ? "success" : b.status === "cancelled" ? "destructive" : "warning"}>
-                        {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
-                      </Badge>
-                      {b.status === "upcoming" && (
-                        <Badge variant="destructive" className="animate-pulse text-[9px] px-1.5 py-0">NEW</Badge>
+      {/* Bookings Table with Search, Tabs, and Live Stats */}
+      {(() => {
+        // Calculate dynamic proportions for utilization stats bar
+        const totalBk = bookings.length || 1;
+        const pendBk = bookings.filter(b => b.status === "upcoming").length;
+        const compBk = bookings.filter(b => b.status === "completed").length;
+        const cancBk = bookings.filter(b => b.status === "cancelled").length;
+
+        const pendPct = Math.round((pendBk / totalBk) * 100);
+        const compPct = Math.round((compBk / totalBk) * 100);
+        const cancPct = Math.round((cancBk / totalBk) * 100);
+
+        // Filter the bookings list reactively
+        const filteredBookings = bookings.filter((b) => {
+          if (bookingStatusFilter === "pending" && b.status !== "upcoming") return false;
+          if (bookingStatusFilter === "completed" && b.status !== "completed") return false;
+          if (bookingStatusFilter === "cancelled" && b.status !== "cancelled") return false;
+
+          const q = bookingSearchQuery.toLowerCase().trim();
+          if (!q) return true;
+
+          return (
+            (b.user?.name || "").toLowerCase().includes(q) ||
+            (b.user?.email || "").toLowerCase().includes(q) ||
+            (b.room?.name || "").toLowerCase().includes(q) ||
+            b.date.includes(q) ||
+            b.slot.includes(q) ||
+            b.status.includes(q)
+          );
+        });
+
+        return (
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardContent className="p-6 space-y-6">
+              
+              {/* Top stats bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-card-foreground">All Reservations</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Manage library bookings, approve pending schedules, or review history.</p>
+                </div>
+
+                {/* Micro-Progress segmented bar */}
+                <div className="flex flex-col gap-1 w-full sm:w-64">
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <span>Utilization Ratio</span>
+                    <span className="text-foreground">{compPct}% Approved</span>
+                  </div>
+                  <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted/60 p-0.5 border border-white/5">
+                    {pendBk > 0 && (
+                      <div style={{ width: `${Math.max(pendPct, 4)}%` }} className="h-full rounded-full bg-amber-500 transition-all duration-500" title={`Pending: ${pendBk}`} />
+                    )}
+                    {compBk > 0 && (
+                      <div style={{ width: `${Math.max(compPct, 4)}%` }} className="h-full rounded-full bg-emerald-500 transition-all duration-500 ml-0.5" title={`Approved: ${compBk}`} />
+                    )}
+                    {cancBk > 0 && (
+                      <div style={{ width: `${Math.max(cancPct, 4)}%` }} className="h-full rounded-full bg-destructive transition-all duration-500 ml-0.5" title={`Rejected: ${cancBk}`} />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Filtering Controls */}
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                
+                {/* Status Tabs */}
+                <div className="flex flex-wrap items-center gap-1.5 bg-muted/40 p-1 rounded-xl border w-fit">
+                  {[
+                    { filter: "all", label: "All Bookings", count: bookings.length },
+                    { filter: "pending", label: "Pending", count: pendBk, badge: true },
+                    { filter: "completed", label: "Approved", count: compBk },
+                    { filter: "cancelled", label: "Rejected", count: cancBk },
+                  ].map((tab) => (
+                    <button
+                      key={tab.filter}
+                      onClick={() => setBookingStatusFilter(tab.filter as any)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300",
+                        bookingStatusFilter === tab.filter
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "text-muted-foreground hover:bg-accent/40"
                       )}
-                    </td>
-                    <td className="py-3">
-                      {b.status === "upcoming" && (
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="success" onClick={() => handleUpdateStatus(b._id, 'completed')} className="transition-transform hover:scale-105">Approve</Button>
-                          <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(b._id, 'cancelled')} className="transition-transform hover:scale-105">Reject</Button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                    >
+                      {tab.label}
+                      <span className={cn(
+                        "rounded-md px-1.5 py-0.25 text-[9px] font-black tracking-widest",
+                        bookingStatusFilter === tab.filter
+                          ? "bg-primary-foreground/20 text-primary-foreground"
+                          : "bg-muted text-muted-foreground",
+                        tab.badge && tab.count > 0 && "bg-amber-500 text-white animate-pulse"
+                      )}>
+                        {tab.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Live Search Input */}
+                <div className="relative w-full md:w-80">
+                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search by student name, email, room..."
+                    value={bookingSearchQuery}
+                    onChange={(e) => setBookingSearchQuery(e.target.value)}
+                    className="h-10 w-full rounded-xl border border-border/50 bg-background/50 pl-10 pr-4 text-xs font-bold text-foreground placeholder:text-muted-foreground backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Table Data */}
+              <div className="overflow-x-auto overflow-y-auto max-h-[420px] border border-border/40 rounded-2xl bg-card/10">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-muted/20 text-left text-muted-foreground uppercase tracking-widest text-[9px] font-black">
+                      <th className="p-3.5 font-black">Student User</th>
+                      <th className="p-3.5 font-black">Reserved Space</th>
+                      <th className="p-3.5 font-black">Reserved Date</th>
+                      <th className="p-3.5 font-black">Duration Slot</th>
+                      <th className="p-3.5 font-black">Approval Status</th>
+                      <th className="p-3.5 font-black text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredBookings.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-muted-foreground font-semibold">
+                          No reservations found matching your active filter.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredBookings.map((b) => {
+                        const statusLabel = b.status === "upcoming" ? "Pending" : b.status === "completed" ? "Approved" : "Rejected";
+                        const badgeVariant = b.status === "upcoming" ? "warning" : b.status === "completed" ? "success" : "destructive";
+
+                        return (
+                          <tr key={b._id} className="border-b last:border-0 transition-colors hover:bg-accent/20">
+                            <td className="p-3.5 font-bold text-foreground">
+                              {b.user?.name || "Unknown Student"} 
+                              <span className="block text-[10px] font-semibold text-muted-foreground mt-0.5 font-mono">{b.user?.email}</span>
+                            </td>
+                            <td className="p-3.5 font-bold text-indigo-300">{b.room?.name || "Library Cabin"}</td>
+                            <td className="p-3.5 text-muted-foreground font-semibold">{b.date}</td>
+                            <td className="p-3.5 text-muted-foreground font-semibold font-mono">{b.slot}</td>
+                            <td className="p-3.5">
+                              <div className="flex items-center gap-1.5">
+                                <Badge variant={badgeVariant} className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                                  {statusLabel}
+                                </Badge>
+                                {b.status === "upcoming" && (
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              {b.status === "upcoming" && (
+                                <div className="flex justify-end gap-1.5">
+                                  <Button 
+                                    size="sm" 
+                                    variant="success" 
+                                    onClick={() => handleUpdateStatus(b._id, 'completed')} 
+                                    className="h-8 rounded-lg font-bold text-[10px]"
+                                  >
+                                    Approve
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => handleUpdateStatus(b._id, 'cancelled')} 
+                                    className="h-8 rounded-lg font-bold text-[10px] text-destructive hover:bg-destructive/10 border-border/50 hover:border-destructive/30"
+                                  >
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
       </>
       )}
 

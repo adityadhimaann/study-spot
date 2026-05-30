@@ -47,6 +47,9 @@ export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
   } else if (location === '/floor-map') {
     title = "Live Floor Map";
     subtitle = "Interactive view of all study spaces and their current availability.";
+  } else if (location === '/study-hub') {
+    title = "Study & Focus Hub";
+    subtitle = "Your focus companion: Pomodoro timer, ambient sounds, and session tasks.";
   } else if (location === '/bookings') {
     title = "My Bookings";
     subtitle = "Manage and review your room reservations.";

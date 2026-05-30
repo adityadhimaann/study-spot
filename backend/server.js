@@ -28,7 +28,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -38,6 +39,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/storage', require('./routes/storage'));
+app.use('/api/collaboration', require('./routes/collaboration'));
 
 // Test route
 app.get('/', (req, res) => {

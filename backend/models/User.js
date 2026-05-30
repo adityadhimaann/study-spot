@@ -42,6 +42,19 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  focusCycles: {
+    type: Number,
+    default: 0,
+  },
+  focusMinutes: {
+    type: Number,
+    default: 0,
+  },
+  weeklyFocusLogs: {
+    type: Map,
+    of: Number,
+    default: { Mon: 45, Tue: 90, Wed: 30, Thu: 120, Fri: 60, Sat: 25, Sun: 0 }
+  },
   createdAt: {
     type: Date,
     default: Date.now,

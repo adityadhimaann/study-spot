@@ -217,9 +217,71 @@ router.post('/google', async (req, res) => {
       },
       message: 'Google login successful',
     });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ message: 'Server error during Google authentication' });
+  }
+});
+
+// @route   GET /api/auth/focus-stats
+// @desc    Retrieve user study focus statistics
+// @access  Private
+router.get('/focus-stats', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    // Ensure default map is initialized if missing
+    if (!user.weeklyFocusLogs || user.weeklyFocusLogs.size === 0) {
+      user.weeklyFocusLogs = { Mon: 45, Tue: 90, Wed: 30, Thu: 120, Fri: 60, Sat: 25, Sun: 0 };
+      await user.save();
+    }
+    
+    res.json({
+      focusCycles: user.focusCycles || 0,
+      focusMinutes: user.focusMinutes || 0,
+      weeklyFocusLogs: Object.fromEntries(user.weeklyFocusLogs)
+    });
   } catch (err) {
-    console.error('Google Auth Error:', err);
-    res.status(401).json({ message: 'Google auth failed: ' + err.message });
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/auth/focus-stats
+// @desc    Update/log a completed focus session
+// @access  Private
+router.post('/focus-stats', auth, async (req, res) => {
+  try {
+    const { minutes } = req.body;
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.focusCycles = (user.focusCycles || 0) + 1;
+    user.focusMinutes = (user.focusMinutes || 0) + (minutes || 25);
+
+    // Update daily logs map
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const today = days[new Date().getDay()];
+    
+    if (!user.weeklyFocusLogs || user.weeklyFocusLogs.size === 0) {
+      user.weeklyFocusLogs = { Mon: 45, Tue: 90, Wed: 30, Thu: 120, Fri: 60, Sat: 25, Sun: 0 };
+    }
+
+    const currentDaily = user.weeklyFocusLogs.get(today) || 0;
+    user.weeklyFocusLogs.set(today, currentDaily + (minutes || 25));
+
+    await user.save();
+
+    res.json({
+      focusCycles: user.focusCycles,
+      focusMinutes: user.focusMinutes,
+      weeklyFocusLogs: Object.fromEntries(user.weeklyFocusLogs),
+      message: 'Focus session logged successfully'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

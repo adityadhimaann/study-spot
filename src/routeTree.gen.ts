@@ -14,6 +14,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppStudyHubRouteImport } from './routes/_app.study-hub'
 import { Route as AppRoomsRouteImport } from './routes/_app.rooms'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppFloorMapRouteImport } from './routes/_app.floor-map'
@@ -44,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppStudyHubRoute = AppStudyHubRouteImport.update({
+  id: '/study-hub',
+  path: '/study-hub',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppRoomsRoute = AppRoomsRouteImport.update({
   id: '/rooms',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
   '/rooms': typeof AppRoomsRoute
+  '/study-hub': typeof AppStudyHubRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/floor-map': typeof AppFloorMapRoute
   '/profile': typeof AppProfileRoute
   '/rooms': typeof AppRoomsRoute
+  '/study-hub': typeof AppStudyHubRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_app/floor-map': typeof AppFloorMapRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/rooms': typeof AppRoomsRoute
+  '/_app/study-hub': typeof AppStudyHubRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/floor-map'
     | '/profile'
     | '/rooms'
+    | '/study-hub'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/floor-map'
     | '/profile'
     | '/rooms'
+    | '/study-hub'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_app/floor-map'
     | '/_app/profile'
     | '/_app/rooms'
+    | '/_app/study-hub'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,6 +210,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/study-hub': {
+      id: '/_app/study-hub'
+      path: '/study-hub'
+      fullPath: '/study-hub'
+      preLoaderRoute: typeof AppStudyHubRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/rooms': {
       id: '/_app/rooms'
@@ -251,6 +270,7 @@ interface AppRouteChildren {
   AppFloorMapRoute: typeof AppFloorMapRoute
   AppProfileRoute: typeof AppProfileRoute
   AppRoomsRoute: typeof AppRoomsRoute
+  AppStudyHubRoute: typeof AppStudyHubRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -260,6 +280,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFloorMapRoute: AppFloorMapRoute,
   AppProfileRoute: AppProfileRoute,
   AppRoomsRoute: AppRoomsRoute,
+  AppStudyHubRoute: AppStudyHubRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
