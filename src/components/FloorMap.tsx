@@ -16,6 +16,8 @@ interface Room {
   w: number;
   h: number;
   floor: string;
+  amenities?: string[];
+  rating?: number;
 }
 
 // Fallback hardcoded initial layouts if DB is empty
@@ -53,6 +55,8 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
           capacity: r.capacity,
           status: r.status,
           floor: r.floor,
+          amenities: r.amenities || [],
+          rating: r.rating || 4.5,
           x: r.x || defaultLayouts[r.name]?.x || 0,
           y: r.y || defaultLayouts[r.name]?.y || 0,
           w: r.w || defaultLayouts[r.name]?.w || 100,
@@ -135,19 +139,63 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         ))}
       </div>
 
-      <div className="relative overflow-hidden rounded-xl border bg-card/50 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-xl border bg-[#080812] text-white">
         <svg viewBox="0 0 440 400" className="w-full h-auto max-w-2xl mx-auto aspect-[1.1]">
-          {/* Grid lines */}
+          {/* Blueprint SVG Gradients Definitions */}
+          <defs>
+            <linearGradient id="grad-available" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.03" />
+            </linearGradient>
+            <linearGradient id="grad-almost-full" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.03" />
+            </linearGradient>
+            <linearGradient id="grad-booked" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid lines (Technical layout blueprint) */}
           {Array.from({ length: 20 }).map((_, i) => (
-            <line key={`g${i}`} x1={i * 22} y1={0} x2={i * 22} y2={400} className="stroke-border/30" strokeWidth={0.5} />
+            <line key={`g${i}`} x1={i * 22} y1={0} x2={i * 22} y2={400} className="stroke-indigo-500/10" strokeWidth={0.5} />
           ))}
           {Array.from({ length: 18 }).map((_, i) => (
-            <line key={`h${i}`} x1={0} y1={i * 22} x2={440} y2={i * 22} className="stroke-border/30" strokeWidth={0.5} />
+            <line key={`h${i}`} x1={0} y1={i * 22} x2={440} y2={i * 22} className="stroke-indigo-500/10" strokeWidth={0.5} />
           ))}
+
+          {/* Hallway Walkway Guideline paths */}
+          <g className="stroke-indigo-400/20 fill-none" strokeWidth={1} strokeDasharray="3 3">
+            <line x1={20} y1={130} x2={420} y2={130} />
+            <line x1={20} y1={270} x2={420} y2={270} />
+            <line x1={148} y1={20} x2={148} y2={380} />
+            <line x1={288} y1={20} x2={288} y2={380} />
+          </g>
+
+          {/* Lobby Entrance, Elevator, Stairs structural elements */}
+          <g className="fill-indigo-500/5 stroke-indigo-500/25" strokeWidth={1}>
+            {/* Stairwell */}
+            <rect x={20} y={5} width={70} height={22} rx={4} />
+            {Array.from({ length: 7 }).map((_, i) => (
+              <line key={`st${i}`} x1={20 + (i * 10)} y1={5} x2={20 + (i * 10)} y2={27} className="stroke-indigo-500/20" strokeWidth={0.8} />
+            ))}
+            <text x={55} y={19} className="fill-indigo-400 text-[8px] font-bold tracking-wider">STAIRS ↗</text>
+
+            {/* Elevator Bay */}
+            <rect x={350} y={5} width={70} height={22} rx={4} />
+            <line x1={350} y1={5} x2={420} y2={27} className="stroke-indigo-500/20" strokeWidth={0.5} />
+            <line x1={420} y1={5} x2={350} y2={27} className="stroke-indigo-500/20" strokeWidth={0.5} />
+            <text x={385} y={19} textAnchor="middle" className="fill-indigo-400 text-[8px] font-bold tracking-wider">ELEVATOR 🛗</text>
+          </g>
 
           {filteredRooms.map((room) => {
             const colors = statusColors[room.status];
             const isHovered = hoveredRoom === room.id;
+            
+            // Map room status colors to SVGs custom gradients
+            const roomGradient = `url(#grad-${room.status})`;
+
             return (
               <g
                 key={room.id}
@@ -160,71 +208,141 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                     if (room.status !== "booked") onRoomSelect?.(room.id, room.name);
                   }
                 }}
-                className={cn("cursor-pointer transition-all", room.status === "booked" && "cursor-not-allowed opacity-60")}
+                className={cn("cursor-pointer transition-all duration-300", room.status === "booked" && "cursor-not-allowed opacity-60")}
               >
+                {/* Outer Room Border (Architectural Double-Wall style) */}
+                <rect
+                  x={room.x - 1.5}
+                  y={room.y - 1.5}
+                  width={room.w + 3}
+                  height={room.h + 3}
+                  rx={9}
+                  className="fill-none stroke-indigo-500/10"
+                  strokeWidth={1}
+                />
+
+                {/* Inner Room Rect */}
                 <rect
                   x={room.x}
                   y={room.y}
                   width={room.w}
                   height={room.h}
                   rx={8}
-                  className={cn(colors.fill, colors.stroke, "transition-all duration-200")}
+                  fill={roomGradient}
+                  className={cn(colors.stroke, "transition-all duration-300")}
                   strokeWidth={isHovered ? 2.5 : 1.5}
-                  style={{ filter: isHovered ? "drop-shadow(0 4px 12px rgba(0,0,0,0.15))" : undefined }}
+                  style={{ filter: isHovered ? "drop-shadow(0 0 12px rgba(99,102,241,0.35))" : undefined }}
                 />
+
+                {/* Architectural Door Swings */}
+                <g className="transition-opacity duration-200">
+                  {/* Door frame line */}
+                  <line 
+                    x1={room.x} 
+                    y1={room.y + room.h - 12} 
+                    x2={room.x} 
+                    y2={room.y + room.h} 
+                    className="stroke-indigo-400/40" 
+                    strokeWidth={1.2} 
+                  />
+                  {/* Open swinging door */}
+                  <line 
+                    x1={room.x} 
+                    y1={room.y + room.h} 
+                    x2={room.x + 10} 
+                    y2={room.y + room.h - 8} 
+                    className={cn(colors.stroke, "opacity-75")} 
+                    strokeWidth={1} 
+                  />
+                  {/* Swinging Arc */}
+                  <path 
+                    d={`M ${room.x} ${room.y + room.h - 12} A 12 12 0 0 1 ${room.x + 12} ${room.y + room.h}`} 
+                    className="stroke-indigo-400/20 fill-none" 
+                    strokeDasharray="2 2" 
+                    strokeWidth={0.8} 
+                  />
+                </g>
+
+                {/* Room Name Label */}
                 <text
                   x={room.x + room.w / 2}
-                  y={room.y + room.h / 2 - 6}
+                  y={room.y + room.h / 2 - 8}
                   textAnchor="middle"
-                  className="fill-foreground text-[10px] font-semibold"
+                  className="fill-white text-[10px] font-black uppercase tracking-wider"
                 >
                   {room.name}
                 </text>
+                
+                {/* Room Capacity Badge */}
                 <text
                   x={room.x + room.w / 2}
-                  y={room.y + room.h / 2 + 10}
+                  y={room.y + room.h / 2 + 8}
                   textAnchor="middle"
-                  className="fill-muted-foreground text-[9px]"
+                  className="fill-indigo-200 text-[8px] font-medium tracking-wide"
                 >
                   Cap: {room.capacity} · {colors.label}
                 </text>
+
+                {/* Pulsing Active Beacon Dots */}
                 {room.status === "available" && (
-                  <circle cx={room.x + room.w - 12} cy={room.y + 12} r={4} className="fill-success animate-pulse" />
+                  <circle cx={room.x + room.w - 12} cy={room.y + 12} r={3.5} className="fill-emerald-400 animate-pulse" />
                 )}
                 {room.status === "almost-full" && (
-                  <circle cx={room.x + room.w - 12} cy={room.y + 12} r={4} className="fill-warning animate-pulse" />
+                  <circle cx={room.x + room.w - 12} cy={room.y + 12} r={3.5} className="fill-amber-400 animate-pulse" />
                 )}
               </g>
             );
           })}
         </svg>
 
-        {/* Tooltip */}
+        {/* Tooltip Card */}
         <AnimatePresence>
           {hoveredRoom && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="absolute bottom-4 left-4 right-4 rounded-xl border bg-card/95 p-4 shadow-xl backdrop-blur-md"
+              initial={{ opacity: 0, y: 12, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.95 }}
+              className="absolute bottom-4 left-4 right-4 rounded-2xl border border-white/10 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-xl z-30"
             >
               {(() => {
                 const room = liveRooms.find((r) => r.id === hoveredRoom)!;
                 const colors = statusColors[room.status];
                 return (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      {room.type === "quiet" ? <Volume2 className="h-5 w-5 text-primary" /> : <Users className="h-5 w-5 text-primary" />}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400">
+                        {room.type === "quiet" ? <Volume2 className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-white uppercase tracking-wider">{room.name}</p>
+                          <Badge variant={room.status === "available" ? "success" : room.status === "almost-full" ? "warning" : "destructive"} className="text-[9px] px-1.5 py-0.25">
+                            {colors.label}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">{room.floor} Floor · Capacity: {room.capacity} people</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-card-foreground">{room.name}</p>
-                      <p className="text-xs text-muted-foreground">{room.floor} Floor · Capacity: {room.capacity}</p>
+                    
+                    {/* Stars & Amenities lists */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <div className="flex items-center gap-1 bg-white/5 rounded-lg px-2 py-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span key={i} className={cn("text-xs", i < Math.floor(room.rating || 4.5) ? "text-amber-400" : "text-slate-600")}>★</span>
+                        ))}
+                        <span className="text-[10px] font-bold text-slate-300 ml-1">{(room.rating || 4.5).toFixed(1)}</span>
+                      </div>
+                      
+                      {room.amenities && room.amenities.length > 0 && (
+                        <div className="flex gap-1">
+                          {room.amenities.slice(0, 3).map((a) => (
+                            <span key={a} className="rounded-md bg-indigo-500/15 border border-indigo-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-300">
+                              {a}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className={cn("h-2 w-2 rounded-full", colors.dot)} />
-                      <span className="text-xs font-medium text-muted-foreground">{colors.label}</span>
-                    </div>
-                    <Wifi className="h-4 w-4 text-muted-foreground" />
                   </div>
                 );
               })()}
