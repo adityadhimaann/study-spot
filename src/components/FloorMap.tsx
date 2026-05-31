@@ -174,13 +174,10 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
       const svgX = (mouseX / rect.width) * 860;
       const svgY = (mouseY / rect.height) * 640;
 
-      const zoomFactor = 1.15;
-      let factor = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
-
-      if (e.ctrlKey) {
-        // High-fidelity Trackpad/Pinch zoom scaling adjustment
-        factor = 1 - e.deltaY * 0.01;
-      }
+      // Ultra-smooth, highly damped zoom factor scaling for trackpads and high-precision scrolling
+      // Using a small sensitivity coefficient and strict clamping to prevent excessive map scaling
+      const zoomSensitivity = 0.0008;
+      const factor = Math.min(Math.max(1 - e.deltaY * zoomSensitivity, 0.92), 1.08);
 
       setViewport((prev) => {
         const newScale = Math.min(Math.max(prev.scale * factor, 0.4), 6);
