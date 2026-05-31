@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Map, BookMarked, Sparkles } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Map, BookMarked, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Book Room", to: "/rooms", icon: CalendarDays },
   { label: "Floor Map", to: "/floor-map", icon: Map },
-  { label: "Study Hub", to: "/study-hub", icon: Sparkles },
+  { label: "Study Hub", to: "/study-hub", icon: Brain },
   { label: "Bookings", to: "/bookings", icon: BookMarked },
 ];
 

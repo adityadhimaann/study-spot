@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, GraduationCap, Building, Clock, Star, CalendarDays, BookMarked, TrendingUp, Camera, Loader2 } from "lucide-react";
+import { User, Mail, GraduationCap, Building, Clock, Star, CalendarDays, BookMarked, TrendingUp, Camera, Loader2, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -238,6 +238,32 @@ function ProfilePage() {
           </motion.div>
         ))}
       </div>
+
+      {/* Settings & Controls Card */}
+      <Card className="border-border/50 bg-card/80 backdrop-blur-sm mt-6 p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-destructive animate-pulse" /> Settings & Controls
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Manage your active student workstation session, clear cached resources, or log out securely.
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              toast.success("Logged out successfully");
+              window.location.href = "/login";
+            }}
+            className="flex items-center gap-2 hover:bg-destructive/90 transition-all font-bold px-5 shrink-0 w-fit self-start md:self-center shadow-md"
+          >
+            <LogOut className="h-4 w-4" /> Log Out
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

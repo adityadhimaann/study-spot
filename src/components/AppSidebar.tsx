@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, BookMarked, User, LogOut, ChevronLeft, ChevronRight, Map, Sparkles } from "lucide-react";
+import { LayoutDashboard, CalendarDays, BookMarked, User, LogOut, ChevronLeft, ChevronRight, Map, Brain } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -10,7 +10,7 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Book Room", to: "/rooms", icon: CalendarDays },
   { label: "Floor Map", to: "/floor-map", icon: Map },
-  { label: "Study Hub", to: "/study-hub", icon: Sparkles },
+  { label: "Study Hub", to: "/study-hub", icon: Brain },
   { label: "My Bookings", to: "/bookings", icon: BookMarked },
   { label: "Profile", to: "/profile", icon: User },
 ];

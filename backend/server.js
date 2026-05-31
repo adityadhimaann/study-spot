@@ -41,6 +41,7 @@ app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/storage', require('./routes/storage'));
 app.use('/api/collaboration', require('./routes/collaboration'));
 app.use('/api/ambient', require('./routes/ambient'));
+app.use('/api/tasks', require('./routes/tasks'));
 
 // Test route
 app.get('/', (req, res) => {

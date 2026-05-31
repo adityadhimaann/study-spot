@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Play, Pause, RotateCcw, Volume2, Sparkles, CheckCircle2, 
-  Trash2, Plus, VolumeX, ListTodo, Trophy, Hourglass, 
-  Clock, Flame, Users, Globe, MapPin, UserPlus, 
+import {
+  Play, Pause, RotateCcw, Volume2, Sparkles, CheckCircle2,
+  Trash2, Plus, VolumeX, ListTodo, Trophy, Hourglass,
+  Clock, Flame, Users, Globe, MapPin, UserPlus,
   PlusCircle, Check, Award, Lock, Zap, BookOpen,
   MessageSquare, Send, Paperclip, Image as ImageIcon, Crown, X, Download, ExternalLink,
   Music, CloudRain, Coffee, Trees, Waves, GraduationCap, Brain, Palmtree, Info
@@ -101,7 +101,7 @@ function StudyHubPage() {
     fire: 0.3,
     waves: 0.4,
   });
-  
+
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
 
   // Collaboration Board States
@@ -119,10 +119,10 @@ function StudyHubPage() {
   const [showRoster, setShowRoster] = useState(false);
   const [selectedFile, setSelectedFile] = useState<{ data: string; name: string; type: string; size: number } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  
+
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Weekly Analytics logs
   const [weeklyLogs, setWeeklyLogs] = useState<Record<string, number>>({
     Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
@@ -184,11 +184,27 @@ function StudyHubPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    // Solo Focus checklist load
-    const savedTasks = localStorage.getItem("study-tasks");
-    if (savedTasks) {
-      try { setTasks(JSON.parse(savedTasks)); } catch (e) {}
-    }
+    // Fetch checklist tasks from Backend DB
+    fetch(`${API_URL}/api/tasks`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Could not load tasks");
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const mappedTasks = data.map((t: any) => ({
+            id: t._id || t.id,
+            text: t.text,
+            completed: t.completed,
+          }));
+          setTasks(mappedTasks);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading tasks:", err);
+      });
 
     // 1. Fetch user's Study Focus statistics & weekly logs from Backend DB
     fetch(`${API_URL}/api/auth/focus-stats`, {
@@ -225,7 +241,7 @@ function StudyHubPage() {
       try {
         const parsed = JSON.parse(storedUser);
         if (parsed.name) setStudentName(parsed.name);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // Fetch user's bookings to let them host sessions
@@ -284,10 +300,7 @@ function StudyHubPage() {
     };
   }, []);
 
-  // Save tasks on changes
-  useEffect(() => {
-    localStorage.setItem("study-tasks", JSON.stringify(tasks));
-  }, [tasks]);
+
 
   // Pomodoro completion triggers backend sync
   const handleTimerComplete = async () => {
@@ -296,7 +309,7 @@ function StudyHubPage() {
 
     if (timerMode === "focus") {
       toast.success("🏆 Focus block completed! Logging details...");
-      
+
       const token = localStorage.getItem("token");
       try {
         const res = await fetch(`${API_URL}/api/auth/focus-stats`, {
@@ -359,32 +372,122 @@ function StudyHubPage() {
     }
   };
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
-    const newTask: Task = {
-      id: Date.now().toString(),
-      text: newTaskText.trim(),
-      completed: false,
-    };
-    setTasks([...tasks, newTask]);
+
+    const text = newTaskText.trim();
     setNewTaskText("");
-    toast.success("Task added to focus list!");
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_URL}/api/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ text })
+      });
+
+      if (!res.ok) throw new Error("Failed to add task");
+      const savedTask = await res.json();
+
+      const newTask: Task = {
+        id: savedTask._id || savedTask.id,
+        text: savedTask.text,
+        completed: savedTask.completed
+      };
+
+      setTasks((prev) => [...prev, newTask]);
+      toast.success("Task added to focus list!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to add task to database");
+    }
   };
 
-  const toggleTask = (id: string) => {
-    setTasks(
-      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+  const toggleTask = async (id: string) => {
+    const taskToToggle = tasks.find((t) => t.id === id);
+    if (!taskToToggle) return;
+
+    const newCompletedState = !taskToToggle.completed;
+
+    // Optimistically update frontend UI state
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: newCompletedState } : t))
     );
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_URL}/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ completed: newCompletedState })
+      });
+
+      if (!res.ok) throw new Error("Failed to update task");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to sync task status");
+      // Rollback on failure
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: !newCompletedState } : t))
+      );
+    }
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter((t) => t.id !== id));
+  const deleteTask = async (id: string) => {
+    const originalTasks = [...tasks];
+
+    // Optimistically remove from frontend UI state
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_URL}/api/tasks/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error("Failed to delete task");
+      toast.success("Task deleted");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete task");
+      // Rollback on failure
+      setTasks(originalTasks);
+    }
   };
 
-  const clearCompletedTasks = () => {
-    setTasks(tasks.filter((t) => !t.completed));
-    toast.info("Cleared completed tasks");
+  const clearCompletedTasks = async () => {
+    const originalTasks = [...tasks];
+
+    // Optimistically filter from frontend state
+    setTasks((prev) => prev.filter((t) => !t.completed));
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_URL}/api/tasks/clear-completed`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error("Failed to clear completed tasks");
+      toast.info("Cleared completed tasks");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to clear completed tasks");
+      // Rollback on failure
+      setTasks(originalTasks);
+    }
   };
 
   // Sound mixer operations
@@ -687,7 +790,7 @@ function StudyHubPage() {
   // Collaboration: Publish booking or custom study group on Backend
   const handleHostGroupSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (hostMode === "booking" && (!hostingBookingId || !hostingTopic.trim())) {
       toast.error("Please select one of your reservations and fill out a study topic.");
       return;
@@ -799,12 +902,12 @@ function StudyHubPage() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      
+
       {/* Dynamic Navigation Panels Toggle */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card/40 border p-4 rounded-3xl backdrop-blur-sm shadow-sm">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-white tracking-tight uppercase flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary animate-pulse" /> Focus & Study Hub
+            Focus & Study Hub
           </h1>
           <p className="text-xs text-slate-400 mt-0.5 font-medium">Stream ambient audio mixers, book study groups, or review personal achievement scores.</p>
         </div>
@@ -814,8 +917,8 @@ function StudyHubPage() {
             onClick={() => setActivePanel("focus")}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-all duration-300",
-              activePanel === "focus" 
-                ? "bg-primary text-primary-foreground shadow-md scale-102" 
+              activePanel === "focus"
+                ? "bg-primary text-primary-foreground shadow-md scale-102"
                 : "text-muted-foreground hover:bg-accent/40"
             )}
           >
@@ -825,8 +928,8 @@ function StudyHubPage() {
             onClick={() => setActivePanel("collaboration")}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-all duration-300 relative",
-              activePanel === "collaboration" 
-                ? "bg-primary text-primary-foreground shadow-md scale-102" 
+              activePanel === "collaboration"
+                ? "bg-primary text-primary-foreground shadow-md scale-102"
                 : "text-muted-foreground hover:bg-accent/40"
             )}
           >
@@ -842,8 +945,8 @@ function StudyHubPage() {
             onClick={() => setActivePanel("analytics")}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-all duration-300",
-              activePanel === "analytics" 
-                ? "bg-primary text-primary-foreground shadow-md scale-102" 
+              activePanel === "analytics"
+                ? "bg-primary text-primary-foreground shadow-md scale-102"
                 : "text-muted-foreground hover:bg-accent/40"
             )}
           >
@@ -1019,14 +1122,14 @@ function StudyHubPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-card-foreground uppercase tracking-widest flex items-center gap-2"><ListTodo className="h-4 w-4 text-primary" /> Today's Session checklist</h3>
-                  {tasks.some(t=>t.completed) && (
+                  {tasks.some(t => t.completed) && (
                     <Button variant="outline" size="sm" onClick={clearCompletedTasks} className="text-xs rounded-xl">Clear Completed</Button>
                   )}
                 </div>
                 <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
                   <Input
                     type="text" placeholder="Add study target..." value={newTaskText}
-                    onChange={(e)=>setNewTaskText(e.target.value)}
+                    onChange={(e) => setNewTaskText(e.target.value)}
                     className="flex-1 bg-muted/40 rounded-xl border-border/50 text-xs"
                   />
                   <Button type="submit" className="rounded-xl px-4 text-xs font-bold gap-1.5"><Plus className="h-4 w-4" /> Add</Button>
@@ -1041,7 +1144,7 @@ function StudyHubPage() {
                         "flex items-center justify-between rounded-xl border border-border/40 p-3 bg-card/40 transition-colors cursor-pointer",
                         task.completed && "bg-accent/10 opacity-70"
                       )}
-                      onClick={()=>toggleTask(task.id)}
+                      onClick={() => toggleTask(task.id)}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <span className={cn(
@@ -1052,7 +1155,7 @@ function StudyHubPage() {
                         </span>
                         <p className={cn("text-xs font-semibold truncate", task.completed && "line-through text-muted-foreground")}>{task.text}</p>
                       </div>
-                      <button onClick={(e)=>{e.stopPropagation(); deleteTask(task.id);}} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 p-1 rounded-lg">
+                      <button onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 p-1 rounded-lg">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -1242,7 +1345,7 @@ function StudyHubPage() {
                         )}
                       >
                         <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
-                        
+
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
@@ -1265,7 +1368,7 @@ function StudyHubPage() {
                               <span className="text-[10px] text-muted-foreground ml-1">Seats Filled</span>
                             </div>
                             <div className="w-24 h-1.5 bg-muted/60 overflow-hidden rounded-full p-0.25 border border-white/5 flex">
-                              <div 
+                              <div
                                 style={{ width: `${(group.participants.length / group.maxSeats) * 100}%` }}
                                 className={cn(
                                   "h-full rounded-full transition-all duration-300",
@@ -1281,10 +1384,10 @@ function StudyHubPage() {
                             <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mr-1">Roster:</span>
                             <div className="flex -space-x-2.5 overflow-hidden">
                               {group.participants.map((person, idx) => {
-                                const initials = person.split(" ").map(n=>n[0]).join("").substring(0, 2).toUpperCase();
+                                const initials = person.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
                                 return (
-                                  <div 
-                                    key={idx} 
+                                  <div
+                                    key={idx}
                                     className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-card bg-gradient-to-br from-indigo-500 to-primary/80 text-[9px] font-black text-white uppercase shadow-sm select-none"
                                     title={person}
                                   >
@@ -1308,14 +1411,14 @@ function StudyHubPage() {
                             )}
 
                             {group.host === studentName ? (
-                              <button 
+                              <button
                                 onClick={() => removeCustomGroup(group._id)}
                                 className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs font-bold px-3 py-1.5 rounded-xl border border-border/50 transition-colors"
                               >
                                 Close Group
                               </button>
                             ) : isJoined ? (
-                              <button 
+                              <button
                                 onClick={() => leaveStudyGroup(group._id)}
                                 className="text-destructive hover:bg-destructive/10 text-xs font-bold px-3 py-1.5 rounded-xl border border-border/50 transition-colors"
                               >
@@ -1328,8 +1431,8 @@ function StudyHubPage() {
                                 onClick={() => joinStudyGroup(group._id)}
                                 className={cn(
                                   "rounded-xl font-bold text-xs px-4 transition-all shadow-sm",
-                                  isFull 
-                                    ? "bg-muted text-muted-foreground" 
+                                  isFull
+                                    ? "bg-muted text-muted-foreground"
                                     : "bg-primary text-primary-foreground hover:scale-105 shadow-primary/10"
                                 )}
                               >
@@ -1391,14 +1494,14 @@ function StudyHubPage() {
                     return (
                       <div key={day} className="flex flex-col items-center flex-1 gap-1.5 h-full justify-end group cursor-pointer">
                         <span className="text-[9px] font-mono font-black text-primary opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">{value}m</span>
-                        <div 
+                        <div
                           style={{ height: `${Math.max(barHeightPct, 6)}%` }}
                           className={cn(
                             "w-full rounded-t-lg bg-gradient-to-t transition-all duration-500",
-                            value > 60 
-                              ? "from-indigo-600 to-indigo-400" 
-                              : value > 0 
-                                ? "from-primary to-primary/75" 
+                            value > 60
+                              ? "from-indigo-600 to-indigo-400"
+                              : value > 0
+                                ? "from-primary to-primary/75"
                                 : "from-muted/40 to-muted/20"
                           )}
                         />
@@ -1426,12 +1529,12 @@ function StudyHubPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                   {achievements.map((ach) => (
-                    <div 
+                    <div
                       key={ach.id}
                       className={cn(
                         "rounded-2xl border p-4 flex flex-col justify-between gap-3 relative overflow-hidden transition-all duration-300 hover:shadow-md",
-                        ach.unlocked 
-                          ? "border-primary/20 bg-primary/5 shadow-sm" 
+                        ach.unlocked
+                          ? "border-primary/20 bg-primary/5 shadow-sm"
                           : "border-border/40 bg-card/30 opacity-75"
                       )}
                     >
@@ -1463,7 +1566,7 @@ function StudyHubPage() {
                           <span className="font-mono">{ach.label}</span>
                         </div>
                         <div className="h-1.5 w-full bg-muted/60 overflow-hidden rounded-full p-0.25 flex">
-                          <div 
+                          <div
                             style={{ width: `${ach.progress}%` }}
                             className={cn(
                               "h-full rounded-full transition-all duration-500",
@@ -1541,8 +1644,8 @@ function StudyHubPage() {
                     onClick={() => setShowRoster(!showRoster)}
                     className={cn(
                       "p-2 rounded-xl transition-all border",
-                      showRoster 
-                        ? "bg-primary text-primary-foreground border-primary" 
+                      showRoster
+                        ? "bg-primary text-primary-foreground border-primary"
                         : "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
                     )}
                     title="View Roster"
@@ -1572,7 +1675,7 @@ function StudyHubPage() {
                       <div className="grid gap-2 sm:grid-cols-2 max-h-40 overflow-y-auto pr-1">
                         {activeChatGroup.participants.map((person, idx) => {
                           const isHost = person === activeChatGroup.host;
-                          const initials = person.split(" ").map(n=>n[0]).join("").substring(0, 2).toUpperCase();
+                          const initials = person.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
                           return (
                             <div key={idx} className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5">
                               <div className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-primary/80 flex items-center justify-center text-[9px] font-black text-white uppercase shadow-sm">
@@ -1622,13 +1725,13 @@ function StudyHubPage() {
                   <div className="space-y-4">
                     {chatMessages.map((msg, idx) => {
                       const isMe = msg.sender === studentName;
-                      const initials = msg.sender.split(" ").map((n: string)=>n[0]).join("").substring(0, 2).toUpperCase();
+                      const initials = msg.sender.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
                       const formattedTime = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                       return (
                         <div key={msg._id || idx} className={cn("flex gap-2.5", isMe ? "justify-end" : "justify-start")}>
                           {!isMe && (
-                            <div 
+                            <div
                               className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-[9px] font-black flex items-center justify-center uppercase shadow-sm shrink-0 self-end select-none"
                               title={msg.sender}
                             >
@@ -1642,8 +1745,8 @@ function StudyHubPage() {
                             <div
                               className={cn(
                                 "p-3 rounded-2xl relative shadow-md border",
-                                isMe 
-                                  ? "bg-primary border-primary-foreground/10 text-primary-foreground rounded-tr-none" 
+                                isMe
+                                  ? "bg-primary border-primary-foreground/10 text-primary-foreground rounded-tr-none"
                                   : "bg-slate-900/90 border-white/10 text-slate-100 rounded-tl-none"
                               )}
                             >
@@ -1655,16 +1758,16 @@ function StudyHubPage() {
                               {/* Attachment - Image */}
                               {msg.fileUrl && msg.fileType?.startsWith("image/") ? (
                                 <div className="mt-2 relative group max-w-xs rounded-xl overflow-hidden border border-white/10">
-                                  <img 
-                                    src={msg.fileUrl} 
-                                    alt={msg.fileName || "Shared image"} 
+                                  <img
+                                    src={msg.fileUrl}
+                                    alt={msg.fileName || "Shared image"}
                                     onClick={() => setPreviewImage(msg.fileUrl)}
                                     className="max-h-56 object-cover w-full cursor-zoom-in hover:opacity-90 transition-opacity"
                                   />
                                 </div>
                               ) : msg.fileUrl ? (
                                 /* Attachment - Document */
-                                <div 
+                                <div
                                   onClick={() => handleDownloadFile(msg.fileUrl, msg.fileName || "file")}
                                   className="mt-2 flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-white/5 cursor-pointer hover:bg-slate-950/90 transition-colors"
                                 >
@@ -1727,21 +1830,21 @@ function StudyHubPage() {
                   {/* File Attachment Input Trigger */}
                   <label className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shrink-0">
                     <Paperclip className="h-4 w-4" />
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      onChange={(e) => handleFileChange(e, false)} 
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(e, false)}
                     />
                   </label>
 
                   {/* Image Attachment Input Trigger */}
                   <label className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shrink-0">
                     <ImageIcon className="h-4 w-4" />
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={(e) => handleFileChange(e, true)} 
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(e, true)}
                     />
                   </label>
                 </div>
