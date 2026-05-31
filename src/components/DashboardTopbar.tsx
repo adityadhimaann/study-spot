@@ -87,15 +87,15 @@ export function DashboardTopbar({ collapsed }: { collapsed?: boolean }) {
         {user ? (
           <>
             <NotificationDropdown />
-            <div className="flex items-center gap-2.5 ml-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 uppercase">
+            <Link to="/profile" className="flex items-center gap-2.5 ml-2 group cursor-pointer">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 uppercase transition-transform duration-200 group-hover:scale-105">
                 {initials}
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-foreground">{name}</p>
+                <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors duration-200">{name}</p>
                 <p className="text-xs text-muted-foreground">{user?.role || 'Student'}</p>
               </div>
-            </div>
+            </Link>
           </>
         ) : (
           <div className="ml-4">
