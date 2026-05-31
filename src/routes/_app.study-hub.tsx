@@ -1585,7 +1585,7 @@ function StudyHubPage() {
               <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
               <div className="flex items-start gap-4 relative z-10">
                 <div className="h-10 w-10 shrink-0 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                  <Sparkles className="h-5 w-5 animate-pulse" />
+                  <Brain className="h-5 w-5 animate-pulse" />
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-xs font-black uppercase tracking-widest text-foreground">Cognitive Balance Study Insights</h4>
