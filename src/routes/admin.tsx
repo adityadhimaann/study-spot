@@ -253,31 +253,31 @@ function AdminPage() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-80 rounded-xl border border-border/50 bg-card/95 p-4 shadow-2xl backdrop-blur-xl z-50 max-h-[400px] overflow-y-auto"
+                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-border/50 bg-card/95 p-4 shadow-2xl backdrop-blur-xl z-50 flex flex-col max-h-[420px] overflow-hidden"
                   >
-                    <div className="mb-3 flex items-center justify-between border-b pb-2">
-                      <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <div className="mb-3 flex items-center justify-between border-b pb-2 shrink-0">
+                       <h3 className="font-semibold text-sm flex items-center gap-2">
                         Notifications <Badge variant="secondary" className="px-1.5 py-0 min-w-[20px] text-center">{upcomingBookings.length}</Badge>
                       </h3>
                     </div>
                     {upcomingBookings.length === 0 ? (
-                      <div className="py-6 text-center flex flex-col items-center text-muted-foreground">
-                        <CheckCircle className="h-8 w-8 mb-2 opacity-20" />
-                        <p className="text-sm">You're all caught up!</p>
+                      <div className="py-8 text-center flex flex-col items-center justify-center text-muted-foreground flex-1">
+                        <CheckCircle className="h-8 w-8 mb-2 opacity-20 text-emerald-400 animate-pulse" />
+                        <p className="text-sm font-bold text-slate-200">You're all caught up!</p>
                         <p className="text-xs">No pending requests.</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="flex-1 overflow-y-auto pr-1.5 space-y-3 max-h-[320px] scrollbar-thin">
                         {upcomingBookings.map(b => (
-                          <div key={b._id} className="rounded-lg border bg-background/50 p-3 text-sm">
+                          <div key={b._id} className="rounded-xl border bg-background/40 hover:bg-background/60 p-3 text-sm transition-colors duration-200">
                             <div className="flex justify-between items-start mb-1.5">
-                              <span className="font-semibold">{b.user?.name || "Student"}</span>
-                              <Badge variant="destructive" className="text-[9px] px-1 py-0">NEW</Badge>
+                              <span className="font-semibold text-slate-100">{b.user?.name || "Student"}</span>
+                              <Badge variant="destructive" className="text-[9px] px-1 py-0 font-bold shrink-0">NEW</Badge>
                             </div>
-                            <p className="text-muted-foreground text-xs mb-2">Requested <span className="font-medium text-foreground">{b.room?.name}</span> for {b.date} at {b.slot}.</p>
+                            <p className="text-muted-foreground text-xs mb-2 leading-relaxed">Requested <span className="font-semibold text-slate-200">{b.room?.name}</span> for {b.date} at {b.slot}.</p>
                             <div className="flex gap-2">
-                              <Button size="sm" variant="success" className="h-7 text-xs flex-1" onClick={() => { handleUpdateStatus(b._id, 'completed'); setShowNotifications(false); }}>Approve</Button>
-                              <Button size="sm" variant="outline" className="h-7 text-xs flex-1" onClick={() => { handleUpdateStatus(b._id, 'cancelled'); setShowNotifications(false); }}>Reject</Button>
+                              <Button size="sm" variant="success" className="h-7 text-xs flex-1 font-bold shadow-sm" onClick={() => { handleUpdateStatus(b._id, 'completed'); setShowNotifications(false); }}>Approve</Button>
+                              <Button size="sm" variant="outline" className="h-7 text-xs flex-1 font-bold hover:bg-destructive/10 hover:text-destructive" onClick={() => { handleUpdateStatus(b._id, 'cancelled'); setShowNotifications(false); }}>Reject</Button>
                             </div>
                           </div>
                         ))}
