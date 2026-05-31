@@ -49,7 +49,7 @@ interface StudyGroup {
   maxSeats: number;
 }
 
-const audioTracks: AudioTrack[] = [
+const audioTracksFallback: AudioTrack[] = [
   { id: "lofi", name: "Chill Lofi Beats", icon: Music, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", color: "from-purple-500/20 to-purple-600/5" },
   { id: "rain", name: "Cozy Rain", icon: CloudRain, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", color: "from-blue-500/20 to-blue-600/5" },
   { id: "cafe", name: "Bustling Cafe", icon: Coffee, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", color: "from-amber-500/20 to-amber-600/5" },
@@ -57,6 +57,15 @@ const audioTracks: AudioTrack[] = [
   { id: "fire", name: "Crackling Fireplace", icon: Flame, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", color: "from-rose-500/20 to-rose-600/5" },
   { id: "waves", name: "Ocean Waves", icon: Waves, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", color: "from-cyan-500/20 to-cyan-600/5" },
 ];
+
+const iconMap: Record<string, any> = {
+  Music,
+  CloudRain,
+  Coffee,
+  Trees,
+  Waves,
+  Flame,
+};
 
 function StudyHubPage() {
   const [activePanel, setActivePanel] = useState<"focus" | "collaboration" | "analytics">("focus");
@@ -82,6 +91,7 @@ function StudyHubPage() {
   const [newTaskText, setNewTaskText] = useState("");
 
   // Audio Mixer States
+  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>(audioTracksFallback);
   const [playingTracks, setPlayingTracks] = useState<Record<string, boolean>>({});
   const [trackVolumes, setTrackVolumes] = useState<Record<string, number>>({
     lofi: 0.5,
@@ -226,6 +236,37 @@ function StudyHubPage() {
       .then((data) => {
         if (Array.isArray(data)) {
           setMyUpcomingBookings(data.filter((b) => b.status === "upcoming"));
+        }
+      })
+      .catch(console.error);
+
+    // 3. Fetch persistent soundtracks from MongoDB
+    fetch(`${API_URL}/api/ambient/tracks`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const loadedTracks = data.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            icon: iconMap[t.icon] || Music,
+            url: t.url,
+            color: t.color
+          }));
+          setAudioTracks(loadedTracks);
+        }
+      })
+      .catch(console.error);
+
+    // 4. Fetch student sound preference mixes from MongoDB
+    fetch(`${API_URL}/api/ambient/preferences`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data === "object" && Object.keys(data).length > 0) {
+          setTrackVolumes((prev) => ({ ...prev, ...data }));
         }
       })
       .catch(console.error);
@@ -386,6 +427,19 @@ function StudyHubPage() {
     const audio = audioRefs.current[trackId];
     if (audio) {
       audio.volume = val;
+    }
+
+    // Persist real-time mix updates directly to MongoDB on drag release
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch(`${API_URL}/api/ambient/preferences`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ volumes: { [trackId]: val } })
+      }).catch(console.error);
     }
   };
 
@@ -915,29 +969,29 @@ function StudyHubPage() {
                         <VolumeX className="h-4 w-4 mr-1.5" /> Mute All
                       </Button>
                     </div>
-                    <div className="grid gap-3.5 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 max-h-[350px] overflow-y-auto pr-1">
                       {audioTracks.map((track) => {
                         const isPlaying = !!playingTracks[track.id];
-                        const vol = trackVolumes[track.id] || 0.4;
+                        const vol = trackVolumes[track.id] !== undefined ? trackVolumes[track.id] : 0.4;
                         return (
                           <div
                             key={track.id}
                             className={cn(
-                              "rounded-2xl border border-white/5 bg-gradient-to-r p-3 flex flex-col gap-2 transition-all duration-300",
+                              "rounded-2xl border border-white/5 bg-gradient-to-br p-3.5 flex flex-col gap-3 justify-between transition-all duration-300",
                               track.color,
-                              isPlaying ? "border-primary/20 bg-primary/5 shadow-md" : "opacity-80"
+                              isPlaying ? "border-primary/20 bg-primary/5 shadow-md scale-[1.01]" : "opacity-75 hover:opacity-90"
                             )}
                           >
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <track.icon className="h-5 w-5 text-primary shrink-0" />
-                                <span className="text-xs font-bold text-foreground">{track.name}</span>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <track.icon className="h-4.5 w-4.5 text-primary shrink-0" />
+                                <span className="text-[11px] font-black text-foreground truncate">{track.name}</span>
                               </div>
                               <button
                                 onClick={() => toggleTrack(track.id)}
                                 className={cn(
-                                  "text-[10px] px-2.5 py-1 rounded-lg font-black uppercase tracking-wider transition-all shadow-sm",
-                                  isPlaying ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"
+                                  "text-[9px] px-2 py-0.5 rounded-lg font-black uppercase tracking-wider transition-all shrink-0",
+                                  isPlaying ? "bg-primary text-primary-foreground shadow" : "bg-white/5 text-muted-foreground hover:bg-white/10"
                                 )}
                               >
                                 {isPlaying ? "Active" : "On"}
@@ -950,7 +1004,7 @@ function StudyHubPage() {
                                 disabled={!isPlaying}
                                 className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary disabled:opacity-40"
                               />
-                              <span className="text-[9px] font-mono font-bold text-muted-foreground w-6 text-right">{Math.round(vol * 100)}%</span>
+                              <span className="text-[8px] font-mono font-bold text-muted-foreground w-6 text-right shrink-0">{Math.round(vol * 100)}%</span>
                             </div>
                           </div>
                         );

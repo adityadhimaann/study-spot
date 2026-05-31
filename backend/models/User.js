@@ -55,6 +55,11 @@ const UserSchema = new mongoose.Schema({
     of: Number,
     default: { Mon: 45, Tue: 90, Wed: 30, Thu: 120, Fri: 60, Sat: 25, Sun: 0 }
   },
+  soundPreferences: {
+    type: Map,
+    of: Number,
+    default: {}
+  },
   createdAt: {
     type: Date,
     default: Date.now,
