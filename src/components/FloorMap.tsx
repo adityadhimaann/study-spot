@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import * as THREE from "three";
 import { API_URL } from "@/lib/api-config";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { 
   Users, Volume2, ZoomIn, ZoomOut, 
-  RefreshCw, Maximize2, Trash2
+  RefreshCw, Maximize2, Trash2, HelpCircle, Layers
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -15,111 +16,75 @@ interface Room {
   type: "quiet" | "group";
   capacity: number;
   status: "available" | "almost-full" | "booked";
-  points: string;
-  cx: number;
-  cy: number;
   floor: string;
   amenities?: string[];
   rating?: number;
+  
+  // 3D coordinates mapped precisely
+  posX: number;
+  posZ: number;
+  width: number;
+  depth: number;
+  height: number;
 }
 
-// Aligned precisely to the widescreen 3D isometric floor plan render (1000x573 scale)
-const isometricLayouts: Record<string, { points: string; cx: number; cy: number }> = {
-  // Study/Teaching Rooms on the left diagonal column
-  "Quiet Zone A1": {
-    points: "70,230 115,198 135,215 90,247",
-    cx: 102,
-    cy: 222
-  },
-  "Quiet Zone A2": {
-    points: "90,247 135,215 155,232 110,264",
-    cx: 122,
-    cy: 239
-  },
-  "Quiet Zone A3": {
-    points: "110,264 155,232 175,249 130,281",
-    cx: 142,
-    cy: 256
-  },
+const room3DLayouts: Record<string, { posX: number; posZ: number; width: number; depth: number; height: number }> = {
+  // Study Pods (Left vertical column)
+  "Quiet Zone A1": { posX: -5.5, posZ: -4, width: 2.2, depth: 1.6, height: 1.2 },
+  "Quiet Zone A2": { posX: -5.5, posZ: -2, width: 2.2, depth: 1.6, height: 1.2 },
+  "Quiet Zone A3": { posX: -5.5, posZ: 0, width: 2.2, depth: 1.6, height: 1.2 },
   
-  // Café Lounge area (Upper left, cozy group space)
-  "Group Room B1": {
-    points: "180,185 240,140 290,175 230,220",
-    cx: 235,
-    cy: 180
-  },
+  // Center conference/group rooms
+  "Group Room B1": { posX: -1.5, posZ: -2, width: 2.6, depth: 2.6, height: 1.5 },
+  "Group Room B2": { posX: 1.5, posZ: -2, width: 2.6, depth: 2.6, height: 1.5 },
+  "Group Room B3": { posX: -1.5, posZ: 2, width: 2.6, depth: 2.6, height: 1.5 },
+  "Group Room C2": { posX: 1.5, posZ: 2, width: 2.6, depth: 2.6, height: 1.5 },
   
-  // Bookable Teaching Space (1) 0.25 (Bottom center)
-  "Group Room B2": {
-    points: "550,420 625,360 670,410 595,470",
-    cx: 610,
-    cy: 415
-  },
-  
-  // Bookable Teaching Space (2) 0.26 (Bottom center, near stairs/lifts)
-  "Group Room B3": {
-    points: "480,360 550,305 590,350 520,405",
-    cx: 535,
-    cy: 355
-  },
-  
-  // Large quiet stack partitioned desks (Bottom right stacks)
-  "Quiet Zone C1": {
-    points: "600,280 750,170 850,230 700,340",
-    cx: 725,
-    cy: 255
-  },
-  
-  // Student IT Help Centre / core desk (Middle center)
-  "Group Room C2": {
-    points: "415,220 480,170 520,210 455,260",
-    cx: 467,
-    cy: 215
-  }
+  // Bottom Lounge quiet zone
+  "Quiet Zone C1": { posX: 0, posZ: 5.5, width: 5.0, depth: 1.8, height: 1.2 }
 };
 
-const statusColors = {
+const statusColors3D = {
   available: { 
-    fill: "rgba(16, 185, 129, 0.04)", 
-    stroke: "stroke-emerald-400 border-emerald-400", 
-    dot: "bg-emerald-400", 
-    label: "Available",
-    glow: "rgba(16, 185, 129, 0.55)",
-    gradient: "from-emerald-500/20 to-transparent"
+    color: 0x10b981, 
+    glowColor: 0x34d399,
+    opacity: 0.15,
+    label: "Available"
   },
   "almost-full": { 
-    fill: "rgba(245, 158, 11, 0.04)", 
-    stroke: "stroke-amber-400 border-amber-400", 
-    dot: "bg-amber-400", 
-    label: "Almost Full",
-    glow: "rgba(245, 158, 11, 0.55)",
-    gradient: "from-amber-500/20 to-transparent"
+    color: 0xf59e0b, 
+    glowColor: 0xfbbf24,
+    opacity: 0.15,
+    label: "Almost Full"
   },
   booked: { 
-    fill: "rgba(239, 68, 68, 0.02)", 
-    stroke: "stroke-red-400 border-red-400", 
-    dot: "bg-red-400", 
-    label: "Booked",
-    glow: "rgba(239, 68, 68, 0.3)",
-    gradient: "from-red-500/10 to-transparent"
+    color: 0xef4444, 
+    glowColor: 0xf87171,
+    opacity: 0.08,
+    label: "Booked"
   },
 };
 
 export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (roomId: string, roomName: string) => void; isAdmin?: boolean }) {
-  const [hoveredRoom, setHoveredRoom] = useState<string | null>(null);
+  const [hoveredRoomId, setHoveredRoomId] = useState<string | null>(null);
   const [selectedFloor, setSelectedFloor] = useState("all");
   const [liveRooms, setLiveRooms] = useState<Room[]>([]);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
-
-  // High-Performance Zoom & Pan Refs (Direct DOM transform mutation, bypasses React render lags entirely!)
-  const zoomRef = useRef(1);
-  const panRef = useRef({ x: 0, y: 0 });
-  const isDraggingRef = useRef(false);
-  const dragStartRef = useRef({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapGroupRef = useRef<SVGGElement>(null);
+
+  // Refs for WebGL Canvas
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const requestRef = useRef<number | null>(null);
+  const roomsMeshMap = useRef<Map<string, THREE.Mesh>>(new Map());
+
+  // Dragging / Orbit camera states (Zero-dependency Orbiting logic)
+  const isDragging = useRef(false);
+  const prevMousePosition = useRef({ x: 0, y: 0 });
+  const cameraAngle = useRef({ theta: Math.PI / 4, phi: Math.PI / 3 }); // spherical coordinates
+  const cameraRadius = useRef(14); // camera distance
 
   useEffect(() => {
     fetch(`${API_URL}/api/rooms`)
@@ -135,162 +100,420 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
           floor: r.floor,
           amenities: r.amenities || [],
           rating: r.rating || 4.5,
-          points: isometricLayouts[r.name]?.points || "0,0 10,0 10,10 0,10",
-          cx: isometricLayouts[r.name]?.cx || 50,
-          cy: isometricLayouts[r.name]?.cy || 50,
-          x: r.x || 0,
-          y: r.y || 0,
-          w: r.w || 100,
-          h: r.h || 80,
+          posX: room3DLayouts[r.name]?.posX || 0,
+          posZ: room3DLayouts[r.name]?.posZ || 0,
+          width: room3DLayouts[r.name]?.width || 2,
+          depth: room3DLayouts[r.name]?.depth || 2,
+          height: room3DLayouts[r.name]?.height || 1.2,
         }));
         setLiveRooms(mappedRooms);
       })
       .catch(console.error);
   }, []);
 
-  const handleSaveEdit = async () => {
-    if (!editingRoom) return;
-    try {
-      const res = await fetch(`${API_URL}/api/admin/rooms/${editingRoom.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          x: editingRoom.x,
-          y: editingRoom.y,
-          w: editingRoom.w,
-          h: editingRoom.h,
-        }),
-      });
-      if (res.ok) {
-        setLiveRooms(liveRooms.map((r) => (r.id === editingRoom.id ? editingRoom : r)));
-        setEditingRoom(null);
-        toast.success("Map coordinates saved successfully!");
-      } else {
-        toast.error("Failed to save map changes.");
+  // Initialize Three.js scene
+  useEffect(() => {
+    if (!canvasContainerRef.current || liveRooms.length === 0) return;
+
+    // 1. Create Scene & Renderer
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x06060c);
+    sceneRef.current = scene;
+
+    // Soft fog for beautiful architectural depth
+    scene.fog = new THREE.FogExp2(0x06060c, 0.025);
+
+    const width = canvasContainerRef.current.clientWidth;
+    const height = canvasContainerRef.current.clientHeight;
+    
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    cameraRef.current = camera;
+    updateCameraPosition();
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(width, height);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    // Clear out container first
+    canvasContainerRef.current.innerHTML = "";
+    canvasContainerRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    // 2. Add Ambient & Directional Lights (Shadows & Neon Highlights)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+    dirLight.position.set(10, 20, 15);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 40;
+    scene.add(dirLight);
+
+    // Beautiful blue neon accent uplights to make the floor plan premium
+    const pointLightLeft = new THREE.PointLight(0x6366f1, 3.5, 15);
+    pointLightLeft.position.set(-6, 3, -2);
+    scene.add(pointLightLeft);
+
+    const pointLightRight = new THREE.PointLight(0x4f46e5, 3.5, 15);
+    pointLightRight.position.set(6, 3, 2);
+    scene.add(pointLightRight);
+
+    // 3. Add Premium 3D Floor Base
+    const floorGeo = new THREE.BoxGeometry(16, 0.15, 14);
+    // Dark concrete texture wood composite look
+    const floorMat = new THREE.MeshStandardMaterial({ 
+      color: 0x11111e, 
+      roughness: 0.45, 
+      metalness: 0.1 
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.position.y = -0.075;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Add a grid helper overlay to give a blueprint CAD look
+    const gridHelper = new THREE.GridHelper(16, 22, 0x4f46e5, 0x1e1e38);
+    gridHelper.position.y = 0.08;
+    scene.add(gridHelper);
+
+    // 4. Add Green Planters (Botanical detail)
+    const potGeo = new THREE.BoxGeometry(0.8, 0.35, 0.8);
+    const potMat = new THREE.MeshStandardMaterial({ color: 0x1a1a24 });
+    const pot = new THREE.Mesh(potGeo, potMat);
+    pot.position.set(-5, 0.25, 3.5);
+    pot.castShadow = true;
+    scene.add(pot);
+
+    const plantGeo = new THREE.SphereGeometry(0.5, 8, 8);
+    const plantMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.9 });
+    const plant = new THREE.Mesh(plantGeo, plantMat);
+    plant.position.set(-5, 0.6, 3.5);
+    scene.add(plant);
+
+    // Pot 2
+    const pot2 = pot.clone();
+    pot2.position.set(5, 0.25, -3.5);
+    scene.add(pot2);
+    const plant2 = plant.clone();
+    plant2.position.set(5, 0.6, -3.5);
+    scene.add(plant2);
+
+    // 5. Add Core Lift Shaft
+    const liftGeo = new THREE.BoxGeometry(1.6, 2.2, 1.8);
+    const liftMat = new THREE.MeshStandardMaterial({ color: 0x181829, metalness: 0.7, roughness: 0.3 });
+    const lift = new THREE.Mesh(liftGeo, liftMat);
+    lift.position.set(6, 1.1, 0.5);
+    lift.castShadow = true;
+    scene.add(lift);
+
+    // Elevator Doors
+    const doorGeo = new THREE.PlaneGeometry(0.8, 1.6);
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0xa5b4fc, metalness: 0.9, roughness: 0.1 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(5.19, 0.8, 0.5);
+    door.rotation.y = -Math.PI / 2;
+    scene.add(door);
+
+    // 6. Draw dynamic 3D Rooms
+    roomsMeshMap.current.clear();
+    
+    liveRooms.forEach((room) => {
+      // Floor filter check
+      if (selectedFloor !== "all") {
+        const floorLetter = selectedFloor[0].toLowerCase();
+        if (!room.floor.toLowerCase().startsWith(floorLetter)) return;
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Network error while saving.");
-    }
-  };
 
-  const handleDeleteRoom = async () => {
-    if (!editingRoom) return;
-    if (!window.confirm(`Are you sure you want to delete ${editingRoom.name}? This will also delete any associated bookings.`)) return;
+      const statusConfig = statusColors3D[room.status];
 
-    try {
-      const res = await fetch(`${API_URL}/api/admin/rooms/${editingRoom.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+      // Room Container Mesh group
+      const roomGroup = new THREE.Group();
+      roomGroup.position.set(room.posX, room.height / 2, room.posZ);
+
+      // Glass partition walls (translucent box)
+      const boxGeo = new THREE.BoxGeometry(room.width, room.height, room.depth);
+      const boxMat = new THREE.MeshStandardMaterial({
+        color: statusConfig.color,
+        transparent: true,
+        opacity: statusConfig.opacity,
+        roughness: 0.15,
+        metalness: 0.1,
+        depthWrite: false
       });
-      if (res.ok) {
-        setLiveRooms(liveRooms.filter((r) => r.id !== editingRoom.id));
-        setEditingRoom(null);
-        toast.success("Room deleted successfully!");
+      const glassRoom = new THREE.Mesh(boxGeo, boxMat);
+      glassRoom.userData = { roomId: room.id, roomName: room.name, status: room.status };
+      glassRoom.receiveShadow = true;
+      roomGroup.add(glassRoom);
+      
+      // Map it for Raycasting hover retrieval
+      roomsMeshMap.current.set(room.id, glassRoom);
+
+      // Glowing Neon outline frame to give premium glassmorphism
+      const edges = new THREE.EdgesGeometry(boxGeo);
+      const lineMat = new THREE.LineBasicMaterial({ 
+        color: statusConfig.glowColor, 
+        linewidth: 2 
+      });
+      const wireframe = new THREE.LineSegments(edges, lineMat);
+      roomGroup.add(wireframe);
+
+      // 3D Furniture inside the rooms!
+      if (room.type === "quiet") {
+        // Study desk
+        const deskW = room.width * 0.7;
+        const deskD = room.depth * 0.25;
+        const deskGeo = new THREE.BoxGeometry(deskW, 0.08, deskD);
+        const deskMat = new THREE.MeshStandardMaterial({ color: 0x4f46e5, roughness: 0.8 });
+        const desk = new THREE.Mesh(deskGeo, deskMat);
+        desk.position.set(0, -room.height / 2 + 0.5, -room.depth * 0.2);
+        desk.castShadow = true;
+        roomGroup.add(desk);
+
+        // Desk leg
+        const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.5);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x1f2937 });
+        const leg1 = new THREE.Mesh(legGeo, legMat);
+        leg1.position.set(-deskW / 2.2, -room.height / 2 + 0.25, -room.depth * 0.2);
+        const leg2 = leg1.clone();
+        leg2.position.set(deskW / 2.2, -room.height / 2 + 0.25, -room.depth * 0.2);
+        roomGroup.add(leg1);
+        roomGroup.add(leg2);
+
+        // Tiny Laptop mesh
+        const laptopGeo = new THREE.BoxGeometry(0.4, 0.02, 0.3);
+        const laptopMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9, roughness: 0.2 });
+        const laptop = new THREE.Mesh(laptopGeo, laptopMat);
+        laptop.position.set(0, -room.height / 2 + 0.55, -room.depth * 0.2);
+        roomGroup.add(laptop);
+
+        // Tiny Swivel chair
+        const chairGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.06);
+        const chairMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
+        const chairSeat = new THREE.Mesh(chairGeo, chairMat);
+        chairSeat.position.set(0, -room.height / 2 + 0.35, 0.1);
+        roomGroup.add(chairSeat);
+
+        const stemGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.35);
+        const stem = new THREE.Mesh(stemGeo, legMat);
+        stem.position.set(0, -room.height / 2 + 0.175, 0.1);
+        roomGroup.add(stem);
       } else {
-        toast.error("Failed to delete room.");
+        // Conference Room table
+        const tblW = room.width * 0.45;
+        const tblD = room.depth * 0.45;
+        const tblGeo = new THREE.BoxGeometry(tblW, 0.08, tblD);
+        const tblMat = new THREE.MeshStandardMaterial({ color: 0x818cf8, roughness: 0.5 });
+        const tbl = new THREE.Mesh(tblGeo, tblMat);
+        tbl.position.set(0, -room.height / 2 + 0.55, 0);
+        tbl.castShadow = true;
+        roomGroup.add(tbl);
+
+        const pedGeo = new THREE.CylinderGeometry(0.15, 0.25, 0.55);
+        const pedMat = new THREE.MeshStandardMaterial({ color: 0x312e81 });
+        const pedestal = new THREE.Mesh(pedGeo, pedMat);
+        pedestal.position.set(0, -room.height / 2 + 0.275, 0);
+        roomGroup.add(pedestal);
+
+        // Surrounding Chairs (4 chairs around the table)
+        const chairGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.06);
+        const chairMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.8 });
+        
+        const posOffsets = [
+          { x: 0, z: -room.depth * 0.32 },
+          { x: 0, z: room.depth * 0.32 },
+          { x: -room.width * 0.32, z: 0 },
+          { x: room.width * 0.32, z: 0 }
+        ];
+
+        posOffsets.forEach((off, idx) => {
+          const seat = new THREE.Mesh(chairGeo, chairMat);
+          seat.position.set(off.x, -room.height / 2 + 0.38, off.z);
+          roomGroup.add(seat);
+
+          const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.38);
+          const stemMat = new THREE.MeshStandardMaterial({ color: 0x09090b });
+          const stem = new THREE.Mesh(stemGeo, stemMat);
+          stem.position.set(off.x, -room.height / 2 + 0.19, off.z);
+          roomGroup.add(stem);
+        });
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Network error while deleting.");
-    }
+
+      scene.add(roomGroup);
+    });
+
+    // 7. Animation tick loop
+    const animate = () => {
+      requestRef.current = requestAnimationFrame(animate);
+      
+      // Let the lights pulse softly for premium ambiance
+      const time = Date.now() * 0.002;
+      pointLightLeft.intensity = 3.5 + Math.sin(time * 1.5) * 0.5;
+      pointLightRight.intensity = 3.5 + Math.cos(time * 1.5) * 0.5;
+
+      renderer.render(scene, camera);
+    };
+    
+    animate();
+
+    // 8. Event listeners for window resizing
+    const handleResize = () => {
+      if (!canvasContainerRef.current || !cameraRef.current || !rendererRef.current) return;
+      const w = canvasContainerRef.current.clientWidth;
+      const h = canvasContainerRef.current.clientHeight;
+      cameraRef.current.aspect = w / h;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(w, h);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+      }
+    };
+  }, [liveRooms, selectedFloor]);
+
+  // Spherical math for camera coordinate updates
+  const updateCameraPosition = () => {
+    if (!cameraRef.current) return;
+    const phi = cameraAngle.current.phi;
+    const theta = cameraAngle.current.theta;
+    const r = cameraRadius.current;
+
+    // Convert spherical coordinates to Cartesian
+    cameraRef.current.position.x = r * Math.sin(phi) * Math.sin(theta);
+    cameraRef.current.position.y = r * Math.cos(phi);
+    cameraRef.current.position.z = r * Math.sin(phi) * Math.cos(theta);
+
+    // Keep camera locked on the center core
+    cameraRef.current.lookAt(0, 0.4, 0);
   };
 
-  // Direct DOM mutation for GPU-accelerated 60fps pan/zoom transformations
-  const updateMapTransform = () => {
-    if (mapGroupRef.current) {
-      mapGroupRef.current.setAttribute(
-        "transform",
-        `translate(${panRef.current.x}, ${panRef.current.y}) scale(${zoomRef.current})`
-      );
-    }
-  };
-
+  // Drag-to-Orbit events (liquid smooth 3D orbits)
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isAdmin && editingRoom) return;
-    const target = e.target as SVGElement;
-    if (target.closest(".interactive-room-group") || target.closest(".admin-edit-panel")) return;
-    isDraggingRef.current = true;
-    dragStartRef.current = { x: e.clientX - panRef.current.x, y: e.clientY - panRef.current.y };
-    if (containerRef.current) {
-      containerRef.current.style.cursor = "grabbing";
-    }
+    isDragging.current = true;
+    prevMousePosition.current = { x: e.clientX, y: e.clientY };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingRef.current) return;
-    panRef.current = {
-      x: e.clientX - dragStartRef.current.x,
-      y: e.clientY - dragStartRef.current.y,
-    };
-    updateMapTransform();
+    // 1. Raycasting hover query
+    if (rendererRef.current && cameraRef.current && sceneRef.current) {
+      const rect = rendererRef.current.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      );
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      
+      const meshes = Array.from(roomsMeshMap.current.values());
+      const intersects = raycaster.intersectObjects(meshes);
+
+      if (intersects.length > 0) {
+        const hitRoom = intersects[0].object as THREE.Mesh;
+        const roomId = hitRoom.userData.roomId;
+        setHoveredRoomId(roomId);
+        
+        // Emissive light highlighting on hover!
+        meshes.forEach((mesh) => {
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          if (mesh.userData.roomId === roomId) {
+            mat.opacity = 0.55; // highlight glass opacity
+            mat.emissive.setHex(0x6366f1);
+            mat.emissiveIntensity = 0.35;
+          } else {
+            const statusConfig = statusColors3D[mesh.userData.status as "available" | "booked" | "almost-full"];
+            mat.opacity = statusConfig.opacity;
+            mat.emissive.setHex(0x000000);
+            mat.emissiveIntensity = 0;
+          }
+        });
+      } else {
+        setHoveredRoomId(null);
+        meshes.forEach((mesh) => {
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          const statusConfig = statusColors3D[mesh.userData.status as "available" | "booked" | "almost-full"];
+          mat.opacity = statusConfig.opacity;
+          mat.emissive.setHex(0x000000);
+          mat.emissiveIntensity = 0;
+        });
+      }
+    }
+
+    // 2. Camera rotation panning
+    if (!isDragging.current) return;
+    const deltaX = e.clientX - prevMousePosition.current.x;
+    const deltaY = e.clientY - prevMousePosition.current.y;
+
+    // Adjust spherical angles
+    cameraAngle.current.theta -= deltaX * 0.0075;
+    cameraAngle.current.phi = Math.max(
+      0.1, 
+      Math.min(Math.PI / 2 - 0.05, cameraAngle.current.phi - deltaY * 0.0075)
+    ); // lock above ground
+
+    prevMousePosition.current = { x: e.clientX, y: e.clientY };
+    updateCameraPosition();
   };
 
-  const handleMouseUp = () => {
-    isDraggingRef.current = false;
-    if (containerRef.current) {
-      containerRef.current.style.cursor = "grab";
+  const handleMouseUp = (e: React.MouseEvent) => {
+    isDragging.current = false;
+
+    // Click raycasting (room select trigger)
+    if (rendererRef.current && cameraRef.current) {
+      const rect = rendererRef.current.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      );
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      const meshes = Array.from(roomsMeshMap.current.values());
+      const intersects = raycaster.intersectObjects(meshes);
+
+      if (intersects.length > 0) {
+        const hitRoom = intersects[0].object as THREE.Mesh;
+        const roomId = hitRoom.userData.roomId;
+        const roomName = hitRoom.userData.roomName;
+        const status = hitRoom.userData.status;
+
+        if (status !== "booked") {
+          onRoomSelect?.(roomId, roomName);
+        } else {
+          toast.error(`${roomName} is booked. Select an available room.`);
+        }
+      }
     }
   };
 
+  // Zoom wheel integrations
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const zoomFactor = 1.15;
-    let newZoom = zoomRef.current;
     if (e.deltaY < 0) {
-      newZoom = Math.min(zoomRef.current * zoomFactor, 4.0);
+      cameraRadius.current = Math.max(6, cameraRadius.current / zoomFactor);
     } else {
-      newZoom = Math.max(zoomRef.current / zoomFactor, 0.5);
+      cameraRadius.current = Math.min(26, cameraRadius.current * zoomFactor);
     }
-    zoomRef.current = newZoom;
-    updateMapTransform();
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (isAdmin && editingRoom) return;
-    const target = e.target as SVGElement;
-    if (target.closest(".interactive-room-group")) return;
-    if (e.touches.length === 1) {
-      isDraggingRef.current = true;
-      dragStartRef.current = { x: e.touches[0].clientX - panRef.current.x, y: e.touches[0].clientY - panRef.current.y };
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDraggingRef.current || e.touches.length !== 1) return;
-    panRef.current = {
-      x: e.touches[0].clientX - dragStartRef.current.x,
-      y: e.touches[0].clientY - dragStartRef.current.y,
-    };
-    updateMapTransform();
-  };
-
-  const handleTouchEnd = () => {
-    isDraggingRef.current = false;
+    updateCameraPosition();
   };
 
   const resetView = () => {
-    zoomRef.current = 1;
-    panRef.current = { x: 0, y: 0 };
-    updateMapTransform();
-    toast.success("Map view reset successfully");
+    cameraRadius.current = 14;
+    cameraAngle.current = { theta: Math.PI / 4, phi: Math.PI / 3 };
+    updateCameraPosition();
+    toast.success("Camera angles reset to blueprint standard");
   };
-
-  const toggleFullscreen = () => {
-    if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
-    } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
-    }
-  };
-
-  const filteredRooms = selectedFloor === "all" ? liveRooms : liveRooms.filter((r) => r.floor.toLowerCase().startsWith(selectedFloor.toLowerCase()[0]));
 
   return (
     <div className="space-y-6 w-full">
@@ -321,8 +544,8 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
           <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-2xl border w-fit backdrop-blur-sm">
             <button
               onClick={() => {
-                zoomRef.current = Math.min(zoomRef.current * 1.25, 4.0);
-                updateMapTransform();
+                cameraRadius.current = Math.max(6, cameraRadius.current / 1.25);
+                updateCameraPosition();
               }}
               className="p-2 rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
               title="Zoom In"
@@ -331,8 +554,8 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
             </button>
             <button
               onClick={() => {
-                zoomRef.current = Math.max(zoomRef.current / 1.25, 0.5);
-                updateMapTransform();
+                cameraRadius.current = Math.min(26, cameraRadius.current * 1.25);
+                updateCameraPosition();
               }}
               className="p-2 rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
               title="Zoom Out"
@@ -357,161 +580,27 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         </div>
       </div>
 
-      {/* Widescreen 3D Isometric Map Canvas Viewport */}
+      {/* Interactive coded Three.js WebGL Canvas Viewport */}
       <div 
         ref={containerRef}
         className={cn(
-          "relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl transition-all select-none cursor-grab w-full",
-          isDraggingRef.current && "cursor-grabbing",
+          "relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl transition-all select-none w-full",
           isFullscreen ? "h-screen w-screen p-0 m-0 z-50 rounded-none" : "h-[450px] md:h-[580px] lg:h-[680px] w-full max-w-none"
         )}
       >
-        <svg
-          viewBox="0 0 1000 573"
-          className="w-full h-full"
+        {/* Three.js Canvas Container */}
+        <div 
+          ref={canvasContainerRef} 
+          className="w-full h-full cursor-grab active:cursor-grabbing"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Custom SVG Animations & Styling */}
-          <style>{`
-            .pulsing-beacon {
-              animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-            }
-            @keyframes ping {
-              75%, 100% {
-                transform: scale(2);
-                opacity: 0;
-              }
-            }
-          `}</style>
-
-          {/* SVG Definitions (Neon Outer Room Glow Filters) */}
-          <defs>
-            <filter id="neon-glow" x="-25%" y="-25%" width="150%" height="150%">
-              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#6366f1" floodOpacity="0.6" />
-            </filter>
-          </defs>
-
-          {/* Group wrapping interactive Zoom & Pan matrix with ref hook */}
-          <g ref={mapGroupRef} className="transition-transform duration-75">
-            
-            {/* Photorealistic 3D Isometric Library Workspace Image Background */}
-            <image 
-              href="/floor_map_isometric.png" 
-              x="0" 
-              y="0" 
-              width="1000" 
-              height="573" 
-            />
-
-            {/* Interactive Workspace Slanted Polygon Glassmorphic Hotspots */}
-            {filteredRooms.map((room) => {
-              const colors = statusColors[room.status];
-              const isHovered = hoveredRoom === room.id;
-              
-              // Resolve active Floor code
-              const nameParts = room.name.split(" ");
-              const code = nameParts[nameParts.length - 1]; // e.g. "A1", "B2"
-              const roomNumberText = `RM ${room.floor.startsWith("2") ? "2" : room.floor.startsWith("3") ? "3" : "1"}${code}`;
-
-              return (
-                <g
-                  key={room.id}
-                  className="interactive-room-group cursor-pointer transition-all duration-300"
-                  onMouseEnter={() => !editingRoom && setHoveredRoom(room.id)}
-                  onMouseLeave={() => !editingRoom && setHoveredRoom(null)}
-                  onClick={() => {
-                    if (isAdmin) {
-                      setEditingRoom(room);
-                    } else {
-                      if (room.status !== "booked") onRoomSelect?.(room.id, room.name);
-                    }
-                  }}
-                >
-                  {/* Glass Slanted Acoustic Hotspot Overlay fill */}
-                  <polygon
-                    points={room.points}
-                    fill={isHovered ? "rgba(99, 102, 241, 0.09)" : colors.fill}
-                    className={cn(colors.stroke, "transition-all duration-200 fill-none stroke-none")}
-                  />
-
-                  {/* Slanted Glass Glowing Overlay borders */}
-                  <polygon
-                    points={room.points}
-                    fill="rgba(255, 255, 255, 0.01)"
-                    stroke={isHovered ? "#818cf8" : "rgba(255,255,255,0.25)"}
-                    strokeWidth={isHovered ? 3.5 : 2}
-                    className="transition-all duration-200"
-                    filter={isHovered ? "url(#neon-glow)" : undefined}
-                    style={{
-                      backdropFilter: isHovered ? "blur(3px)" : "none"
-                    }}
-                  />
-
-                  {/* High-Contrast Bold Room Name text (Centered at centroid) */}
-                  <text
-                    x={room.cx}
-                    y={room.cy - 7}
-                    textAnchor="middle"
-                    className="fill-white text-[9.5px] font-black uppercase tracking-wider select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]"
-                  >
-                    {room.name}
-                  </text>
-
-                  {/* Room Number text */}
-                  <text
-                    x={room.cx}
-                    y={room.cy + 3}
-                    textAnchor="middle"
-                    className="fill-indigo-300 text-[8px] font-black tracking-widest uppercase select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]"
-                  >
-                    {roomNumberText}
-                  </text>
-
-                  {/* Capacity text */}
-                  <text
-                    x={room.cx}
-                    y={room.cy + 13}
-                    textAnchor="middle"
-                    className="fill-indigo-200/90 text-[7px] font-black tracking-wide select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]"
-                  >
-                    CAP: {room.capacity}
-                  </text>
-
-                  {/* Pulsing Active Status Beacon indicators (Centered near centroids) */}
-                  {room.status === "available" && (
-                    <g transform={`translate(${room.cx + 28}, ${room.cy - 12})`}>
-                      <circle cx={0} cy={0} r={5} className="fill-emerald-400/25 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
-                      <circle cx={0} cy={0} r={2.5} className="fill-emerald-400" />
-                    </g>
-                  )}
-                  {room.status === "almost-full" && (
-                    <g transform={`translate(${room.cx + 28}, ${room.cy - 12})`}>
-                      <circle cx={0} cy={0} r={5} className="fill-amber-400/25 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
-                      <circle cx={0} cy={0} r={2.5} className="fill-amber-400" />
-                    </g>
-                  )}
-                  {room.status === "booked" && (
-                    <g transform={`translate(${room.cx + 28}, ${room.cy - 12})`}>
-                      <circle cx={0} cy={0} r={2.5} className="fill-red-400" />
-                    </g>
-                  )}
-                </g>
-              );
-            })}
-
-          </g>
-        </svg>
+        />
 
         {/* Hover details HUD Card overlay */}
         <AnimatePresence>
-          {hoveredRoom && (
+          {hoveredRoomId && (
             <motion.div
               initial={{ opacity: 0, y: 15, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -519,9 +608,9 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
               className="absolute bottom-4 left-4 right-4 rounded-2xl border border-white/10 bg-slate-950/85 p-4 shadow-2xl backdrop-blur-xl z-30 pointer-events-none"
             >
               {(() => {
-                const room = liveRooms.find((r) => r.id === hoveredRoom)!;
+                const room = liveRooms.find((r) => r.id === hoveredRoomId)!;
                 if (!room) return null;
-                const colors = statusColors[room.status];
+                const colors = statusColors3D[room.status];
                 const nameParts = room.name.split(" ");
                 const code = nameParts[nameParts.length - 1];
                 const roomNumberText = `RM ${room.floor.startsWith("2") ? "2" : room.floor.startsWith("3") ? "3" : "1"}${code}`;
@@ -573,7 +662,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
 
         {/* Floating Instruction Guide Banner */}
         <div className="absolute top-4 left-4 rounded-xl border border-white/5 bg-slate-950/70 px-3 py-1.5 text-[9px] text-slate-400 backdrop-blur-md pointer-events-none hidden sm:block">
-          🖱️ <span className="font-bold text-white">Left-click + Drag</span> to pan · ⚙️ <span className="font-bold text-white">Scroll</span> to Zoom
+          🖱️ <span className="font-bold text-white">Left-click + Drag</span> to rotate · ⚙️ <span className="font-bold text-white">Scroll</span> to Zoom · 🎯 <span className="font-bold text-white">Click</span> to Book
         </div>
 
         {/* Admin Coordinates Editor HUD */}
@@ -648,20 +737,20 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
 
       {/* Modern Legend */}
       <div className="flex flex-wrap items-center justify-center gap-4 rounded-2xl border bg-card/40 p-3 text-xs text-muted-foreground backdrop-blur-sm shadow-sm w-full">
-        <span className="font-bold text-foreground mr-1 uppercase tracking-wider text-[10px]">Legend:</span>
-        {Object.entries(statusColors).map(([key, val]) => (
+        <span className="font-bold text-foreground mr-1 uppercase tracking-wider text-[10px]">3D View Legend:</span>
+        {Object.entries(statusColors3D).map(([key, val]) => (
           <div key={key} className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
-            <span className={cn("h-2.5 w-2.5 rounded-full", val.dot, key !== "booked" && "pulsing-beacon")} />
+            <span className={cn("h-2.5 w-2.5 rounded-full")} style={{ backgroundColor: `#${val.color.toString(16)}` }} />
             <span className="text-foreground/80">{val.label}</span>
           </div>
         ))}
         <div className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
-          <span className="text-emerald-500 font-bold">i</span>
-          <span className="text-foreground/80">Information Point Kiosk</span>
+          <span className="h-2 w-2 bg-indigo-500 rounded-full" />
+          <span className="text-foreground/80">3D Swivel Desks & Chairs</span>
         </div>
         <div className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
-          <span className="text-primary font-bold">S</span>
-          <span className="text-foreground/80">Meeting / Study Pod</span>
+          <span className="h-2.5 w-2.5 bg-emerald-500 rounded-full" />
+          <span className="text-foreground/80">3D Planters 🪴</span>
         </div>
       </div>
     </div>
