@@ -45,6 +45,24 @@ const defaultLayouts: Record<string, {x:number, y:number, w:number, h:number}> =
   "Quiet Zone C4": { x: 730, y: 470, w: 100, h: 110 },
 };
 
+const SLOT_TEMPLATES = [
+  // Row 1
+  { x: 30,  y: 60,  w: 170, h: 110 },
+  { x: 230, y: 60,  w: 170, h: 110 },
+  { x: 430, y: 60,  w: 170, h: 110 },
+  { x: 630, y: 60,  w: 170, h: 110 },
+  // Row 2
+  { x: 30,  y: 250, w: 270, h: 140 },
+  { x: 330, y: 250, w: 270, h: 140 },
+  { x: 630, y: 250, w: 170, h: 140 },
+  // Row 3
+  { x: 30,  y: 470, w: 170, h: 110 },
+  { x: 230, y: 470, w: 270, h: 110 },
+  { x: 530, y: 470, w: 170, h: 110 },
+  { x: 730, y: 470, w: 100, h: 110 },
+];
+
+
 const statusColors = {
   available: { fill: "fill-emerald-500/10", stroke: "stroke-emerald-500/40", dot: "bg-emerald-500", label: "Available" },
   "almost-full": { fill: "fill-warning/15", stroke: "stroke-warning/50", dot: "bg-warning", label: "Almost Full" },
@@ -136,6 +154,8 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
       .then(res => res.json())
       .then(data => {
         if (!Array.isArray(data)) return;
+        
+        // 1. Map dynamic database rooms and normalize floor formats
         const mappedRooms = data.map((r: any) => {
           let normFloor = r.floor || "1st";
           if (normFloor.toLowerCase().includes("1st")) normFloor = "1st";
@@ -151,13 +171,48 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
             floor: normFloor,
             amenities: r.amenities || [],
             rating: r.rating || 4.5,
-            x: r.x || defaultLayouts[r.name]?.x || 0,
-            y: r.y || defaultLayouts[r.name]?.y || 0,
-            w: r.w || defaultLayouts[r.name]?.w || 150,
-            h: r.h || defaultLayouts[r.name]?.h || 100,
+            x: r.x || 0,
+            y: r.y || 0,
+            w: r.w || 150,
+            h: r.h || 100,
           };
         });
-        setLiveRooms(mappedRooms);
+
+        // 2. Intelligent visual slot allocation to avoid overlaps for database rooms
+        const floorCounts: Record<string, number> = {};
+        const finalRooms = mappedRooms.map((room) => {
+          // If coordinates are explicitly set in DB (not 0,0), preserve them
+          if (room.x !== 0 || room.y !== 0) {
+            return room;
+          }
+          
+          // If there's an entry in defaultLayouts for this specific room, map it
+          if (defaultLayouts[room.name]) {
+            return {
+              ...room,
+              x: defaultLayouts[room.name].x,
+              y: defaultLayouts[room.name].y,
+              w: defaultLayouts[room.name].w,
+              h: defaultLayouts[room.name].h,
+            };
+          }
+          
+          // Otherwise, dynamically assign the next open structural slot in the grid for this floor!
+          const floorKey = room.floor;
+          const index = floorCounts[floorKey] || 0;
+          floorCounts[floorKey] = index + 1;
+          
+          const template = SLOT_TEMPLATES[index % SLOT_TEMPLATES.length];
+          return {
+            ...room,
+            x: template.x,
+            y: template.y,
+            w: template.w,
+            h: template.h,
+          };
+        });
+
+        setLiveRooms(finalRooms);
       })
       .catch(console.error);
   }, []);
