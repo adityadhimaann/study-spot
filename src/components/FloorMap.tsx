@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { 
   Users, Volume2, ZoomIn, ZoomOut, 
-  RefreshCw, Maximize2, Trash2, HelpCircle
+  RefreshCw, Maximize2, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -74,13 +74,15 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
   const [liveRooms, setLiveRooms] = useState<Room[]>([]);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 
-  // Zoom & Pan states
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  // High-Performance Zoom & Pan Refs (Direct DOM transform mutation, bypasses React render lags entirely!)
+  const zoomRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapGroupRef = useRef<SVGGElement>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/rooms`)
@@ -159,65 +161,83 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
     }
   };
 
-  // Drag and zoom event handlers
+  // Direct DOM mutation for GPU-accelerated 60fps pan/zoom transformations
+  const updateMapTransform = () => {
+    if (mapGroupRef.current) {
+      mapGroupRef.current.setAttribute(
+        "transform",
+        `translate(${panRef.current.x}, ${panRef.current.y}) scale(${zoomRef.current})`
+      );
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isAdmin && editingRoom) return; // Disable panning when editing
+    if (isAdmin && editingRoom) return;
     const target = e.target as SVGElement;
     if (target.closest(".interactive-room-group") || target.closest(".admin-edit-panel")) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    isDraggingRef.current = true;
+    dragStartRef.current = { x: e.clientX - panRef.current.x, y: e.clientY - panRef.current.y };
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "grabbing";
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setPan({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
+    if (!isDraggingRef.current) return;
+    panRef.current = {
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    };
+    updateMapTransform();
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
+    isDraggingRef.current = false;
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "grab";
+    }
   };
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const zoomFactor = 1.1;
-    let newZoom = zoom;
+    const zoomFactor = 1.15;
+    let newZoom = zoomRef.current;
     if (e.deltaY < 0) {
-      newZoom = Math.min(zoom * zoomFactor, 3.5);
+      newZoom = Math.min(zoomRef.current * zoomFactor, 4.0);
     } else {
-      newZoom = Math.max(zoom / zoomFactor, 0.7);
+      newZoom = Math.max(zoomRef.current / zoomFactor, 0.5);
     }
-    setZoom(newZoom);
+    zoomRef.current = newZoom;
+    updateMapTransform();
   };
 
-  // Touch support for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isAdmin && editingRoom) return;
     const target = e.target as SVGElement;
     if (target.closest(".interactive-room-group")) return;
     if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y });
+      isDraggingRef.current = true;
+      dragStartRef.current = { x: e.touches[0].clientX - panRef.current.x, y: e.touches[0].clientY - panRef.current.y };
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    setPan({
-      x: e.touches[0].clientX - dragStart.x,
-      y: e.touches[0].clientY - dragStart.y,
-    });
+    if (!isDraggingRef.current || e.touches.length !== 1) return;
+    panRef.current = {
+      x: e.touches[0].clientX - dragStartRef.current.x,
+      y: e.touches[0].clientY - dragStartRef.current.y,
+    };
+    updateMapTransform();
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
+    isDraggingRef.current = false;
   };
 
   const resetView = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    zoomRef.current = 1;
+    panRef.current = { x: 0, y: 0 };
+    updateMapTransform();
     toast.success("Map view reset successfully");
   };
 
@@ -233,9 +253,9 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
   const filteredRooms = selectedFloor === "all" ? liveRooms : liveRooms.filter((r) => r.floor.toLowerCase().startsWith(selectedFloor.toLowerCase()[0]));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {/* Floor Filter & HUD controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 w-full">
         <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-2xl border w-fit backdrop-blur-sm shadow-sm">
           {["all", "1st", "2nd", "3rd"].map((f) => (
             <button
@@ -260,14 +280,20 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
           {/* Zoom and Navigation controls */}
           <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-2xl border w-fit backdrop-blur-sm">
             <button
-              onClick={() => setZoom(Math.min(zoom * 1.25, 3.5))}
+              onClick={() => {
+                zoomRef.current = Math.min(zoomRef.current * 1.25, 4.0);
+                updateMapTransform();
+              }}
               className="p-2 rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
               title="Zoom In"
             >
               <ZoomIn className="h-4 w-4" />
             </button>
             <button
-              onClick={() => setZoom(Math.max(zoom / 1.25, 0.7))}
+              onClick={() => {
+                zoomRef.current = Math.max(zoomRef.current / 1.25, 0.5);
+                updateMapTransform();
+              }}
               className="p-2 rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
               title="Zoom Out"
             >
@@ -291,13 +317,13 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         </div>
       </div>
 
-      {/* Main Floor Map Canvas Viewport (Square Ratio Aligned) */}
+      {/* Main Floor Map Canvas Viewport (Broad and Full Width Aligned) */}
       <div 
         ref={containerRef}
         className={cn(
-          "relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl transition-all select-none cursor-grab",
-          isDragging && "cursor-grabbing",
-          isFullscreen ? "h-screen w-screen p-0 m-0 z-50 rounded-none" : "h-[500px] md:h-[650px] w-full max-w-[650px] mx-auto aspect-square"
+          "relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl transition-all select-none cursor-grab w-full",
+          isDraggingRef.current && "cursor-grabbing",
+          isFullscreen ? "h-screen w-screen p-0 m-0 z-50 rounded-none" : "h-[450px] md:h-[620px] lg:h-[720px] w-full max-w-none"
         )}
       >
         <svg
@@ -332,8 +358,8 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
             </filter>
           </defs>
 
-          {/* Group wrapping interactive Zoom & Pan matrix */}
-          <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} className="transition-transform duration-75">
+          {/* Group wrapping interactive Zoom & Pan matrix with ref hook */}
+          <g ref={mapGroupRef} className="transition-transform duration-75">
             
             {/* Photorealistic 3D Architectural Floor Plan Render Image Background */}
             <image 
@@ -592,7 +618,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
       </div>
 
       {/* Modern Blueprint Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-4 rounded-2xl border bg-card/40 p-3 text-xs text-muted-foreground backdrop-blur-sm shadow-sm">
+      <div className="flex flex-wrap items-center justify-center gap-4 rounded-2xl border bg-card/40 p-3 text-xs text-muted-foreground backdrop-blur-sm shadow-sm w-full">
         <span className="font-bold text-foreground mr-1 uppercase tracking-wider text-[10px]">Legend:</span>
         {Object.entries(statusColors).map(([key, val]) => (
           <div key={key} className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">

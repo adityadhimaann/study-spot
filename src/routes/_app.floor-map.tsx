@@ -14,9 +14,9 @@ function FloorMapPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6">
-      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardContent className="p-6">
+    <div className="space-y-6 w-full max-w-none">
+      <Card className="border-border/50 bg-card/80 backdrop-blur-sm w-full max-w-none overflow-hidden">
+        <CardContent className="p-2 md:p-4 w-full">
           <FloorMap onRoomSelect={(id, name) => {
             toast.success(`Selected room ${name} — redirecting to booking...`);
             setTimeout(() => {
