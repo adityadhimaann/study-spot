@@ -15,55 +15,92 @@ interface Room {
   type: "quiet" | "group";
   capacity: number;
   status: "available" | "almost-full" | "booked";
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  points: string;
+  cx: number;
+  cy: number;
   floor: string;
   amenities?: string[];
   rating?: number;
 }
 
-// Aligned precisely to the photorealistic 3D architectural render (800x800 square scale)
-const defaultLayouts: Record<string, { x: number; y: number; w: number; h: number }> = {
-  // Study Pods (Left vertical column in 3D floor plan render)
-  "Quiet Zone A1": { x: 74, y: 100, w: 140, h: 72 },
-  "Quiet Zone A2": { x: 74, y: 182, w: 140, h: 72 },
-  "Quiet Zone A3": { x: 74, y: 264, w: 140, h: 72 },
+// Aligned precisely to the widescreen 3D isometric floor plan render (1000x573 scale)
+const isometricLayouts: Record<string, { points: string; cx: number; cy: number }> = {
+  // Study/Teaching Rooms on the left diagonal column
+  "Quiet Zone A1": {
+    points: "70,230 115,198 135,215 90,247",
+    cx: 102,
+    cy: 222
+  },
+  "Quiet Zone A2": {
+    points: "90,247 135,215 155,232 110,264",
+    cx: 122,
+    cy: 239
+  },
+  "Quiet Zone A3": {
+    points: "110,264 155,232 175,249 130,281",
+    cx: 142,
+    cy: 256
+  },
   
-  // Center Quadrant conference areas
-  "Group Room B1": { x: 270, y: 270, w: 165, h: 155 },
-  "Group Room B2": { x: 440, y: 270, w: 160, h: 155 },
-  "Group Room B3": { x: 270, y: 430, w: 165, h: 155 },
-  "Group Room C2": { x: 440, y: 430, w: 160, h: 155 },
+  // Café Lounge area (Upper left, cozy group space)
+  "Group Room B1": {
+    points: "180,185 240,140 290,175 230,220",
+    cx: 235,
+    cy: 180
+  },
   
-  // Bottom Study Lounges
-  "Quiet Zone C1": { x: 260, y: 645, w: 300, h: 110 }
+  // Bookable Teaching Space (1) 0.25 (Bottom center)
+  "Group Room B2": {
+    points: "550,420 625,360 670,410 595,470",
+    cx: 610,
+    cy: 415
+  },
+  
+  // Bookable Teaching Space (2) 0.26 (Bottom center, near stairs/lifts)
+  "Group Room B3": {
+    points: "480,360 550,305 590,350 520,405",
+    cx: 535,
+    cy: 355
+  },
+  
+  // Large quiet stack partitioned desks (Bottom right stacks)
+  "Quiet Zone C1": {
+    points: "600,280 750,170 850,230 700,340",
+    cx: 725,
+    cy: 255
+  },
+  
+  // Student IT Help Centre / core desk (Middle center)
+  "Group Room C2": {
+    points: "415,220 480,170 520,210 455,260",
+    cx: 467,
+    cy: 215
+  }
 };
 
 const statusColors = {
   available: { 
-    fill: "rgba(16, 185, 129, 0.05)", 
-    stroke: "stroke-emerald-400/70 border-emerald-400", 
+    fill: "rgba(16, 185, 129, 0.04)", 
+    stroke: "stroke-emerald-400 border-emerald-400", 
     dot: "bg-emerald-400", 
     label: "Available",
-    glow: "rgba(16, 185, 129, 0.45)",
+    glow: "rgba(16, 185, 129, 0.55)",
     gradient: "from-emerald-500/20 to-transparent"
   },
   "almost-full": { 
-    fill: "rgba(245, 158, 11, 0.05)", 
-    stroke: "stroke-amber-400/70 border-amber-400", 
+    fill: "rgba(245, 158, 11, 0.04)", 
+    stroke: "stroke-amber-400 border-amber-400", 
     dot: "bg-amber-400", 
     label: "Almost Full",
-    glow: "rgba(245, 158, 11, 0.45)",
+    glow: "rgba(245, 158, 11, 0.55)",
     gradient: "from-amber-500/20 to-transparent"
   },
   booked: { 
-    fill: "rgba(239, 68, 68, 0.03)", 
-    stroke: "stroke-red-400/40 border-red-400", 
-    dot: "bg-red-400/70", 
+    fill: "rgba(239, 68, 68, 0.02)", 
+    stroke: "stroke-red-400 border-red-400", 
+    dot: "bg-red-400", 
     label: "Booked",
-    glow: "rgba(239, 68, 68, 0.2)",
+    glow: "rgba(239, 68, 68, 0.3)",
     gradient: "from-red-500/10 to-transparent"
   },
 };
@@ -98,10 +135,13 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
           floor: r.floor,
           amenities: r.amenities || [],
           rating: r.rating || 4.5,
-          x: defaultLayouts[r.name]?.x || r.x || 0,
-          y: defaultLayouts[r.name]?.y || r.y || 0,
-          w: defaultLayouts[r.name]?.w || r.w || 100,
-          h: defaultLayouts[r.name]?.h || r.h || 80,
+          points: isometricLayouts[r.name]?.points || "0,0 10,0 10,10 0,10",
+          cx: isometricLayouts[r.name]?.cx || 50,
+          cy: isometricLayouts[r.name]?.cy || 50,
+          x: r.x || 0,
+          y: r.y || 0,
+          w: r.w || 100,
+          h: r.h || 80,
         }));
         setLiveRooms(mappedRooms);
       })
@@ -317,17 +357,17 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         </div>
       </div>
 
-      {/* Main Floor Map Canvas Viewport (Broad and Full Width Aligned) */}
+      {/* Widescreen 3D Isometric Map Canvas Viewport */}
       <div 
         ref={containerRef}
         className={cn(
           "relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl transition-all select-none cursor-grab w-full",
           isDraggingRef.current && "cursor-grabbing",
-          isFullscreen ? "h-screen w-screen p-0 m-0 z-50 rounded-none" : "h-[450px] md:h-[620px] lg:h-[720px] w-full max-w-none"
+          isFullscreen ? "h-screen w-screen p-0 m-0 z-50 rounded-none" : "h-[450px] md:h-[580px] lg:h-[680px] w-full max-w-none"
         )}
       >
         <svg
-          viewBox="0 0 800 800"
+          viewBox="0 0 1000 573"
           className="w-full h-full"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -353,26 +393,24 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
 
           {/* SVG Definitions (Neon Outer Room Glow Filters) */}
           <defs>
-            <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#6366f1" floodOpacity="0.5" />
+            <filter id="neon-glow" x="-25%" y="-25%" width="150%" height="150%">
+              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#6366f1" floodOpacity="0.6" />
             </filter>
           </defs>
 
           {/* Group wrapping interactive Zoom & Pan matrix with ref hook */}
           <g ref={mapGroupRef} className="transition-transform duration-75">
             
-            {/* Photorealistic 3D Architectural Floor Plan Render Image Background */}
+            {/* Photorealistic 3D Isometric Library Workspace Image Background */}
             <image 
-              href="/floor_map_render.png" 
-              x="40" 
-              y="40" 
-              width="720" 
-              height="720" 
-              rx="16" 
-              style={{ clipPath: "inset(0% round 16px)" }}
+              href="/floor_map_isometric.png" 
+              x="0" 
+              y="0" 
+              width="1000" 
+              height="573" 
             />
 
-            {/* Interactive Workspace Glassmorphic Hotspots */}
+            {/* Interactive Workspace Slanted Polygon Glassmorphic Hotspots */}
             {filteredRooms.map((room) => {
               const colors = statusColors[room.status];
               const isHovered = hoveredRoom === room.id;
@@ -396,28 +434,19 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                     }
                   }}
                 >
-                  {/* Glass Acoustic Partition (Hotspot fill layer) */}
-                  <rect
-                    x={room.x}
-                    y={room.y}
-                    width={room.w}
-                    height={room.h}
-                    rx={12}
-                    fill={isHovered ? "rgba(99, 102, 241, 0.08)" : colors.fill}
+                  {/* Glass Slanted Acoustic Hotspot Overlay fill */}
+                  <polygon
+                    points={room.points}
+                    fill={isHovered ? "rgba(99, 102, 241, 0.09)" : colors.fill}
                     className={cn(colors.stroke, "transition-all duration-200 fill-none stroke-none")}
-                    strokeWidth={isHovered ? 2.5 : 1}
                   />
 
-                  {/* Glass Glowing Overlay borders */}
-                  <rect
-                    x={room.x}
-                    y={room.y}
-                    width={room.w}
-                    height={room.h}
-                    rx={12}
+                  {/* Slanted Glass Glowing Overlay borders */}
+                  <polygon
+                    points={room.points}
                     fill="rgba(255, 255, 255, 0.01)"
-                    stroke={isHovered ? "#818cf8" : "rgba(255,255,255,0.15)"}
-                    strokeWidth={isHovered ? 3 : 1.5}
+                    stroke={isHovered ? "#818cf8" : "rgba(255,255,255,0.25)"}
+                    strokeWidth={isHovered ? 3.5 : 2}
                     className="transition-all duration-200"
                     filter={isHovered ? "url(#neon-glow)" : undefined}
                     style={{
@@ -425,51 +454,51 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                     }}
                   />
 
-                  {/* High-Contrast Bold Room Name text */}
+                  {/* High-Contrast Bold Room Name text (Centered at centroid) */}
                   <text
-                    x={room.x + room.w / 2}
-                    y={room.y + room.h / 2 - 8}
+                    x={room.cx}
+                    y={room.cy - 7}
                     textAnchor="middle"
-                    className="fill-white text-[10px] font-black uppercase tracking-wider select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                    className="fill-white text-[9.5px] font-black uppercase tracking-wider select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]"
                   >
                     {room.name}
                   </text>
 
                   {/* Room Number text */}
                   <text
-                    x={room.x + room.w / 2}
-                    y={room.y + room.h / 2 + 3}
+                    x={room.cx}
+                    y={room.cy + 3}
                     textAnchor="middle"
-                    className="fill-indigo-300 text-[8px] font-black tracking-widest uppercase select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                    className="fill-indigo-300 text-[8px] font-black tracking-widest uppercase select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]"
                   >
                     {roomNumberText}
                   </text>
 
-                  {/* Capacity & Live availability status line */}
+                  {/* Capacity text */}
                   <text
-                    x={room.x + room.w / 2}
-                    y={room.y + room.h / 2 + 13}
+                    x={room.cx}
+                    y={room.cy + 13}
                     textAnchor="middle"
-                    className="fill-indigo-200/90 text-[7px] font-black tracking-wide select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                    className="fill-indigo-200/90 text-[7px] font-black tracking-wide select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]"
                   >
                     CAP: {room.capacity}
                   </text>
 
-                  {/* Pulsing Active Status Beacon indicators */}
+                  {/* Pulsing Active Status Beacon indicators (Centered near centroids) */}
                   {room.status === "available" && (
-                    <g transform={`translate(${room.x + room.w - 14}, ${room.y + 14})`}>
-                      <circle cx={0} cy={0} r={5} className="fill-emerald-400/20 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
+                    <g transform={`translate(${room.cx + 28}, ${room.cy - 12})`}>
+                      <circle cx={0} cy={0} r={5} className="fill-emerald-400/25 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
                       <circle cx={0} cy={0} r={2.5} className="fill-emerald-400" />
                     </g>
                   )}
                   {room.status === "almost-full" && (
-                    <g transform={`translate(${room.x + room.w - 14}, ${room.y + 14})`}>
-                      <circle cx={0} cy={0} r={5} className="fill-amber-400/20 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
+                    <g transform={`translate(${room.cx + 28}, ${room.cy - 12})`}>
+                      <circle cx={0} cy={0} r={5} className="fill-amber-400/25 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
                       <circle cx={0} cy={0} r={2.5} className="fill-amber-400" />
                     </g>
                   )}
                   {room.status === "booked" && (
-                    <g transform={`translate(${room.x + room.w - 14}, ${room.y + 14})`}>
+                    <g transform={`translate(${room.cx + 28}, ${room.cy - 12})`}>
                       <circle cx={0} cy={0} r={2.5} className="fill-red-400" />
                     </g>
                   )}
@@ -617,7 +646,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         )}
       </div>
 
-      {/* Modern Blueprint Legend */}
+      {/* Modern Legend */}
       <div className="flex flex-wrap items-center justify-center gap-4 rounded-2xl border bg-card/40 p-3 text-xs text-muted-foreground backdrop-blur-sm shadow-sm w-full">
         <span className="font-bold text-foreground mr-1 uppercase tracking-wider text-[10px]">Legend:</span>
         {Object.entries(statusColors).map(([key, val]) => (
@@ -626,6 +655,14 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
             <span className="text-foreground/80">{val.label}</span>
           </div>
         ))}
+        <div className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
+          <span className="text-emerald-500 font-bold">i</span>
+          <span className="text-foreground/80">Information Point Kiosk</span>
+        </div>
+        <div className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
+          <span className="text-primary font-bold">S</span>
+          <span className="text-foreground/80">Meeting / Study Pod</span>
+        </div>
       </div>
     </div>
   );
