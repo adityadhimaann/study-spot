@@ -3,9 +3,8 @@ import { API_URL } from "@/lib/api-config";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { 
-  Users, Volume2, Wifi, Trash2, ZoomIn, ZoomOut, 
-  RefreshCw, Maximize2, HelpCircle, MapPin, Coffee, 
-  Layers, ArrowUpRight, Compass, ShieldAlert
+  Users, Volume2, ZoomIn, ZoomOut, 
+  RefreshCw, Maximize2, Trash2, HelpCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -25,41 +24,47 @@ interface Room {
   rating?: number;
 }
 
+// Aligned precisely to the photorealistic 3D architectural render (800x800 square scale)
 const defaultLayouts: Record<string, { x: number; y: number; w: number; h: number }> = {
-  "Quiet Zone A1": { x: 20, y: 40, w: 120, h: 80 },
-  "Quiet Zone A2": { x: 160, y: 40, w: 120, h: 80 },
-  "Quiet Zone A3": { x: 300, y: 40, w: 120, h: 80 },
-  "Group Room B1": { x: 20, y: 160, w: 180, h: 100 },
-  "Group Room B2": { x: 220, y: 160, w: 200, h: 100 },
-  "Group Room B3": { x: 440, y: 160, w: 140, h: 100 },
-  "Quiet Zone C1": { x: 20, y: 300, w: 120, h: 80 },
-  "Group Room C2": { x: 160, y: 300, w: 260, h: 80 },
+  // Study Pods (Left vertical column in 3D floor plan render)
+  "Quiet Zone A1": { x: 74, y: 100, w: 140, h: 72 },
+  "Quiet Zone A2": { x: 74, y: 182, w: 140, h: 72 },
+  "Quiet Zone A3": { x: 74, y: 264, w: 140, h: 72 },
+  
+  // Center Quadrant conference areas
+  "Group Room B1": { x: 270, y: 270, w: 165, h: 155 },
+  "Group Room B2": { x: 440, y: 270, w: 160, h: 155 },
+  "Group Room B3": { x: 270, y: 430, w: 165, h: 155 },
+  "Group Room C2": { x: 440, y: 430, w: 160, h: 155 },
+  
+  // Bottom Study Lounges
+  "Quiet Zone C1": { x: 260, y: 645, w: 300, h: 110 }
 };
 
 const statusColors = {
   available: { 
-    fill: "fill-success/15", 
-    stroke: "stroke-success", 
-    dot: "bg-success", 
+    fill: "rgba(16, 185, 129, 0.05)", 
+    stroke: "stroke-emerald-400/70 border-emerald-400", 
+    dot: "bg-emerald-400", 
     label: "Available",
-    glow: "rgba(16, 185, 129, 0.4)",
-    gradient: "url(#grad-available)"
+    glow: "rgba(16, 185, 129, 0.45)",
+    gradient: "from-emerald-500/20 to-transparent"
   },
   "almost-full": { 
-    fill: "fill-warning/15", 
-    stroke: "stroke-warning", 
-    dot: "bg-warning", 
+    fill: "rgba(245, 158, 11, 0.05)", 
+    stroke: "stroke-amber-400/70 border-amber-400", 
+    dot: "bg-amber-400", 
     label: "Almost Full",
-    glow: "rgba(245, 158, 11, 0.4)",
-    gradient: "url(#grad-almost-full)"
+    glow: "rgba(245, 158, 11, 0.45)",
+    gradient: "from-amber-500/20 to-transparent"
   },
   booked: { 
-    fill: "fill-destructive/10", 
-    stroke: "stroke-destructive", 
-    dot: "bg-destructive", 
+    fill: "rgba(239, 68, 68, 0.03)", 
+    stroke: "stroke-red-400/40 border-red-400", 
+    dot: "bg-red-400/70", 
     label: "Booked",
     glow: "rgba(239, 68, 68, 0.2)",
-    gradient: "url(#grad-booked)"
+    gradient: "from-red-500/10 to-transparent"
   },
 };
 
@@ -91,10 +96,10 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
           floor: r.floor,
           amenities: r.amenities || [],
           rating: r.rating || 4.5,
-          x: r.x || defaultLayouts[r.name]?.x || 0,
-          y: r.y || defaultLayouts[r.name]?.y || 0,
-          w: r.w || defaultLayouts[r.name]?.w || 100,
-          h: r.h || defaultLayouts[r.name]?.h || 80,
+          x: defaultLayouts[r.name]?.x || r.x || 0,
+          y: defaultLayouts[r.name]?.y || r.y || 0,
+          w: defaultLayouts[r.name]?.w || r.w || 100,
+          h: defaultLayouts[r.name]?.h || r.h || 80,
         }));
         setLiveRooms(mappedRooms);
       })
@@ -225,84 +230,6 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
     }
   };
 
-  // Custom detailed room furniture renderer
-  const renderFurniture = (room: Room) => {
-    const furniture: JSX.Element[] = [];
-
-    if (room.type === "quiet") {
-      // Quiet zones feature structured study desks (carrels) with partition glass, chairs, laptops, and mugs
-      const desksCount = room.w >= 140 ? 4 : 3;
-      const spacing = (room.w - 30) / (desksCount - 1 || 1);
-
-      for (let i = 0; i < desksCount; i++) {
-        const deskX = room.x + 15 + i * spacing;
-        const deskY = room.y + room.h / 2 - 10;
-        const key = `desk-${room.id}-${i}`;
-
-        furniture.push(
-          <g key={key} className="furniture-group stroke-indigo-400/25 fill-none" strokeWidth={0.6}>
-            {/* Table Top */}
-            <rect x={deskX - 10} y={deskY} width={20} height={14} rx={1.5} className="fill-indigo-950/20" />
-            {/* Swivel Chair */}
-            <circle cx={deskX} cy={deskY + 22} r={3.5} className="fill-slate-900 stroke-indigo-400/35" />
-            <path d={`M ${deskX - 4} ${deskY + 24} Q ${deskX} ${deskY + 26} ${deskX + 4} ${deskY + 24}`} className="stroke-indigo-400/30" />
-            {/* Laptop shape */}
-            <rect x={deskX - 5} y={deskY + 2} width={10} height={7} rx={0.5} className="fill-indigo-500/10 stroke-indigo-400/30" />
-            <line x1={deskX - 5} y1={deskY + 9} x2={deskX + 5} y2={deskY + 9} className="stroke-indigo-400/50" strokeWidth={0.8} />
-            {/* Small Coffee Cup */}
-            <circle cx={deskX + 7} cy={deskY + 3} r={1} className="stroke-amber-400/40 fill-none" />
-            {/* Privacy glass partition dividers */}
-            {i < desksCount - 1 && (
-              <line x1={deskX + spacing / 2 - 5} y1={deskY - 2} x2={deskX + spacing / 2 - 5} y2={deskY + 16} className="stroke-indigo-500/15" strokeDasharray="1 1" />
-            )}
-          </g>
-        );
-      }
-    } else {
-      // Group collaboration rooms feature oval conference table, laptops, notebooks, TV screens, and executive chairs
-      const tblW = room.w * 0.5;
-      const tblH = Math.min(room.h * 0.4, 25);
-      const tblX = room.x + (room.w - tblW) / 2;
-      const tblY = room.y + (room.h - tblH) / 2;
-
-      // TV Display on Wall
-      const tvX = room.x + room.w / 2 - 15;
-      const tvY = room.y + 1;
-
-      furniture.push(
-        <g key={`group-furn-${room.id}`} className="stroke-indigo-400/30 fill-none" strokeWidth={0.7}>
-          {/* Oval Conference Table */}
-          <rect x={tblX} y={tblY} width={tblW} height={tblH} rx={tblH / 2} className="fill-indigo-950/20 stroke-indigo-400/40 shadow-inner" />
-          
-          {/* Wall TV / Presentation Screen */}
-          <rect x={tvX} y={tvY} width={30} height={2} rx={0.5} className="fill-indigo-400/20 stroke-indigo-400/50" />
-          <path d={`M ${tvX + 5} ${tvY + 2} L ${tvX + 10} ${tvY + 5} M ${tvX + 25} ${tvY + 2} L ${tvX + 20} ${tvY + 5}`} className="stroke-indigo-500/20" strokeWidth={0.5} />
-
-          {/* Chairs all around */}
-          {/* Top chairs */}
-          <circle cx={tblX + tblW * 0.25} cy={tblY - 6} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-          <circle cx={tblX + tblW * 0.5} cy={tblY - 6} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-          <circle cx={tblX + tblW * 0.75} cy={tblY - 6} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-          
-          {/* Bottom chairs */}
-          <circle cx={tblX + tblW * 0.25} cy={tblY + tblH + 6} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-          <circle cx={tblX + tblW * 0.5} cy={tblY + tblH + 6} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-          <circle cx={tblX + tblW * 0.75} cy={tblY + tblH + 6} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-
-          {/* Left / Right End Chairs */}
-          <circle cx={tblX - 6} cy={tblY + tblH / 2} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-          <circle cx={tblX + tblW + 6} cy={tblY + tblH / 2} r={3.5} className="fill-slate-900 stroke-indigo-500/30" />
-
-          {/* Laptops on table */}
-          <rect x={tblX + tblW * 0.3} y={tblY + tblH / 2 - 3} width={5} height={4} rx={0.5} className="stroke-indigo-400/20 fill-none" />
-          <rect x={tblX + tblW * 0.65} y={tblY + tblH / 2 - 2} width={5} height={4} rx={0.5} className="stroke-indigo-400/20 fill-none" />
-        </g>
-      );
-    }
-
-    return furniture;
-  };
-
   const filteredRooms = selectedFloor === "all" ? liveRooms : liveRooms.filter((r) => r.floor.toLowerCase().startsWith(selectedFloor.toLowerCase()[0]));
 
   return (
@@ -364,17 +291,17 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         </div>
       </div>
 
-      {/* Main Floor Map Canvas Viewport */}
+      {/* Main Floor Map Canvas Viewport (Square Ratio Aligned) */}
       <div 
         ref={containerRef}
         className={cn(
-          "relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-[#080815] text-white shadow-2xl transition-all select-none cursor-grab",
+          "relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl transition-all select-none cursor-grab",
           isDragging && "cursor-grabbing",
-          isFullscreen ? "h-screen w-screen p-0 m-0 z-50 rounded-none" : "h-[450px] md:h-[500px] w-full"
+          isFullscreen ? "h-screen w-screen p-0 m-0 z-50 rounded-none" : "h-[500px] md:h-[650px] w-full max-w-[650px] mx-auto aspect-square"
         )}
       >
         <svg
-          viewBox="0 0 740 440"
+          viewBox="0 0 800 800"
           className="w-full h-full"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -387,225 +314,39 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         >
           {/* Custom SVG Animations & Styling */}
           <style>{`
-            @keyframes walkwayFlow {
-              to { stroke-dashoffset: -24; }
-            }
-            .animated-walkway {
-              stroke-dasharray: 8 6;
-              animation: walkwayFlow 2.5s linear infinite;
-            }
             .pulsing-beacon {
               animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
             }
-            .compass-needle {
-              transform-origin: 690px 75px;
-              transition: transform 0.5s ease-in-out;
-            }
-            .compass-needle:hover {
-              transform: rotate(360deg);
-            }
-            .emergency-exit {
-              stroke-dasharray: 4 4;
+            @keyframes ping {
+              75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+              }
             }
           `}</style>
 
-          {/* SVG Definitions (Patterns, Filters, Gradients) */}
+          {/* SVG Definitions (Neon Outer Room Glow Filters) */}
           <defs>
-            {/* Tile Floor Grid Pattern */}
-            <pattern id="floor-tiles" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="#060611" />
-              <rect width="20" height="20" fill="none" stroke="rgba(99, 102, 241, 0.03)" strokeWidth="0.5" />
-              <circle cx="20" cy="20" r="0.5" fill="rgba(99, 102, 241, 0.15)" />
-            </pattern>
-
-            {/* Hardwood Parquet Parallels Pattern for Lounges */}
-            <pattern id="floor-parquet" width="40" height="40" patternUnits="userSpaceOnUse">
-              <rect width="40" height="40" fill="#08081a" />
-              <line x1="0" y1="0" x2="40" y2="0" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="0.8" />
-              <line x1="0" y1="13.3" x2="40" y2="13.3" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="0.8" />
-              <line x1="0" y1="26.6" x2="40" y2="26.6" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="0.8" />
-              <line x1="13.3" y1="0" x2="13.3" y2="13.3" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="0.8" />
-              <line x1="26.6" y1="13.3" x2="26.6" y2="26.6" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="0.8" />
-              <line x1="20" y1="26.6" x2="20" y2="40" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="0.8" />
-            </pattern>
-
-            {/* Concrete Core Column Hatch */}
-            <pattern id="concrete-hatch" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-              <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(99, 102, 241, 0.12)" strokeWidth="1" />
-            </pattern>
-
-            {/* Room Available Status Glowing Gradients */}
-            <linearGradient id="grad-available" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
-            </linearGradient>
-
-            {/* Room Almost Full Status Gradients */}
-            <linearGradient id="grad-almost-full" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
-            </linearGradient>
-
-            {/* Room Booked Status Gradients */}
-            <linearGradient id="grad-booked" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.01" />
-            </linearGradient>
-
-            {/* Neon Outer Room Glow Filters */}
-            <filter id="neon-glow" x="-10%" y="-10%" width="120%" height="120%">
-              <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#6366f1" floodOpacity="0.4" />
+            <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#6366f1" floodOpacity="0.5" />
             </filter>
           </defs>
 
           {/* Group wrapping interactive Zoom & Pan matrix */}
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} className="transition-transform duration-75">
             
-            {/* Tile Floor Ground base */}
-            <rect x={0} y={0} width={740} height={440} fill="url(#floor-tiles)" />
+            {/* Photorealistic 3D Architectural Floor Plan Render Image Background */}
+            <image 
+              href="/floor_map_render.png" 
+              x="40" 
+              y="40" 
+              width="720" 
+              height="720" 
+              rx="16" 
+              style={{ clipPath: "inset(0% round 16px)" }}
+            />
 
-            {/* Blueprint Fine Grid Lines (CAD Engineering Grid) */}
-            <g className="stroke-indigo-500/5" strokeWidth={0.4}>
-              {Array.from({ length: 37 }).map((_, i) => (
-                <line key={`vert-${i}`} x1={i * 20} y1={0} x2={i * 20} y2={440} />
-              ))}
-              {Array.from({ length: 22 }).map((_, i) => (
-                <line key={`horiz-${i}`} x1={0} y1={i * 20} x2={740} y2={i * 20} />
-              ))}
-            </g>
-
-            {/* Blueprint Coordinate Axes Border Frame */}
-            <rect x={10} y={30} width={720} height={380} rx={16} className="fill-none stroke-indigo-500/20" strokeWidth={2.5} />
-            <rect x={8} y={28} width={724} height={384} rx={18} className="fill-none stroke-indigo-500/5" strokeWidth={0.8} />
-
-            {/* Blueprint Coordinate Grid Labels (A-F / 1-5) */}
-            <g className="fill-indigo-500/30 text-[7px] font-black tracking-widest text-center" pointerEvents="none">
-              {["A", "B", "C", "D", "E", "F"].map((label, idx) => (
-                <text key={`ax-${idx}`} x={35 + idx * 125} y={23} textAnchor="middle">{label}</text>
-              ))}
-              {[1, 2, 3, 4].map((label, idx) => (
-                <text key={`ay-${idx}`} x={18} y={65 + idx * 100} textAnchor="middle">{label}</text>
-              ))}
-            </g>
-
-            {/* Lounge Parquet wood flooring highlights */}
-            <rect x={20} y={150} width={560} height={120} fill="url(#floor-parquet)" opacity={0.6} />
-
-            {/* Hallway Walkway Laser Flow Guidelines (Emergency Routes) */}
-            <g className="stroke-indigo-500/20 fill-none animated-walkway" strokeWidth={0.8}>
-              <line x1={20} y1={130} x2={720} y2={130} />
-              <line x1={20} y1={280} x2={720} y2={280} />
-              <line x1={148} y1={30} x2={148} y2={410} />
-              <line x1={420} y1={30} x2={420} y2={410} />
-            </g>
-
-            {/* Double Structural Wall Framing Hatch Core Columns */}
-            <rect x={10} y={30} width={720} height={10} fill="url(#concrete-hatch)" className="stroke-indigo-500/30" strokeWidth={0.7} />
-            <rect x={10} y={400} width={720} height={10} fill="url(#concrete-hatch)" className="stroke-indigo-500/30" strokeWidth={0.7} />
-            <rect x={10} y={30} width={10} height={380} fill="url(#concrete-hatch)" className="stroke-indigo-500/30" strokeWidth={0.7} />
-            <rect x={720} y={30} width={10} height={380} fill="url(#concrete-hatch)" className="stroke-indigo-500/30" strokeWidth={0.7} />
-
-            {/* Restrooms Facility block at central back */}
-            <g className="fill-indigo-950/20 stroke-indigo-500/25" strokeWidth={0.8}>
-              <rect x={180} y={40} width={100} height={30} rx={4} />
-              <line x1={230} y1={40} x2={230} y2={70} className="stroke-indigo-500/20" />
-              {/* Sinks and Mirrors */}
-              <circle cx={194} cy={48} r={2} className="stroke-indigo-400/25" />
-              <circle cx={208} cy={48} r={2} className="stroke-indigo-400/25" />
-              <circle cx={222} cy={48} r={2} className="stroke-indigo-400/25" />
-              {/* Toilet partitions */}
-              <rect x={240} y={44} width={10} height={12} rx={1} className="stroke-indigo-500/15" />
-              <rect x={256} y={44} width={10} height={12} rx={1} className="stroke-indigo-500/15" />
-              <rect x={272} y={44} width={10} height={12} rx={1} className="stroke-indigo-500/15" />
-              <text x={230} y={64} textAnchor="middle" className="fill-indigo-400/80 text-[6px] font-black tracking-widest uppercase">RESTROOMS 🚻</text>
-            </g>
-
-            {/* Elevator core vertical shafts */}
-            <g className="fill-slate-900 stroke-indigo-500/30" strokeWidth={0.8}>
-              {/* Shaft Outline */}
-              <rect x={600} y={180} width={80} height={60} rx={6} className="fill-indigo-950/30 stroke-indigo-500/40" />
-              {/* Lift Box 1 */}
-              <rect x={608} y={188} width={28} height={44} rx={3} className="fill-slate-950 stroke-indigo-500/30" />
-              {/* Lift Box 2 */}
-              <rect x={644} y={188} width={28} height={44} rx={3} className="fill-slate-950 stroke-indigo-500/30" />
-              {/* Sliding Double-Doors lines */}
-              <line x1={622} y1={232} x2={622} y2={188} strokeDasharray="1 1" />
-              <line x1={658} y1={232} x2={658} y2={188} strokeDasharray="1 1" />
-              <path d="M 608 210 H 636 M 644 210 H 672" className="stroke-indigo-400/15" />
-              <text x={640} y={180} textAnchor="middle" className="fill-indigo-400/80 text-[6px] font-black tracking-widest uppercase">ELEVATORS 🛗</text>
-            </g>
-
-            {/* Stairs egress structural block */}
-            <g className="fill-none stroke-indigo-500/30" strokeWidth={0.8}>
-              {/* Outer boundary */}
-              <rect x={600} y={300} width={80} height={80} rx={6} className="fill-indigo-950/20 stroke-indigo-500/40" />
-              {/* Stairs tread parallel lines */}
-              {Array.from({ length: 9 }).map((_, idx) => (
-                <line key={`st-${idx}`} x1={608} y1={308 + idx * 8} x2={672} y2={308 + idx * 8} />
-              ))}
-              <line x1={640} y1={308} x2={640} y2={372} className="stroke-indigo-400/50" />
-              {/* Direction Indicator */}
-              <path d="M 640 365 L 640 315 L 637 322 M 640 315 L 643 322" className="stroke-primary fill-none" strokeWidth={1.2} />
-              <text x={640} y={296} textAnchor="middle" className="fill-indigo-400/80 text-[6px] font-black tracking-widest uppercase">STAIRWELL 🪜</text>
-            </g>
-
-            {/* Lobby & Curved Reception Desk Area */}
-            <g className="fill-indigo-950/20 stroke-indigo-500/30" strokeWidth={0.8}>
-              {/* Circular desk layout */}
-              <path d="M 300 370 A 30 30 0 0 1 360 370" fill="none" className="stroke-indigo-400/45" strokeWidth={3} />
-              <circle cx={330} cy={375} r={3} className="fill-slate-900 stroke-indigo-500/30" />
-              {/* Computer monitor layout */}
-              <rect x={324} y={363} width={12} height={2} rx={0.5} className="fill-indigo-400/30 stroke-none" />
-              <circle cx={345} cy={355} r={4.5} className="fill-emerald-500/10 stroke-emerald-500/35" />
-              <text x={330} y={392} textAnchor="middle" className="fill-indigo-400/70 text-[6px] font-bold tracking-widest uppercase">RECEPTION 🛎️</text>
-            </g>
-
-            {/* Coffee Lounge, Kitchenette & Stools Cafe */}
-            <g className="fill-none stroke-indigo-500/25" strokeWidth={0.8}>
-              {/* Cafe Boundary area */}
-              <rect x={440} y={40} width={240} height={80} rx={8} className="fill-indigo-950/10 stroke-indigo-500/35" />
-              <text x={560} y={34} textAnchor="middle" className="fill-indigo-400/80 text-[6px] font-black tracking-widest uppercase">CAFÉ & LOUNGE ☕</text>
-              
-              {/* Coffee Counter and Sinks */}
-              <rect x={448} y={48} width={120} height={14} rx={1} className="fill-indigo-950/30" />
-              {/* Coffee Machine */}
-              <rect x={456} y={50} width={16} height={10} rx={1} className="stroke-indigo-400/40 fill-none" />
-              <circle cx={464} cy={55} r={2} className="stroke-amber-400/40 fill-none" />
-              {/* Lounge Dining Tables */}
-              <circle cx={600} cy={85} r={12} className="fill-indigo-950/20 stroke-indigo-400/40" />
-              <circle cx={600} cy={85} r={3} className="stroke-indigo-500/30 fill-none" />
-              
-              {/* Cafe Stools */}
-              <circle cx={585} cy={85} r={2.5} className="fill-slate-900 stroke-indigo-500/30" />
-              <circle cx={615} cy={85} r={2.5} className="fill-slate-900 stroke-indigo-500/30" />
-              <circle cx={600} cy={70} r={2.5} className="fill-slate-900 stroke-indigo-500/30" />
-              <circle cx={600} cy={100} r={2.5} className="fill-slate-900 stroke-indigo-500/30" />
-
-              <circle cx={645} cy={85} r={12} className="fill-indigo-950/20 stroke-indigo-400/40" />
-              <circle cx={645} cy={85} r={2.5} className="fill-slate-900 stroke-indigo-500/30" />
-              <circle cx={630} cy={85} r={2.5} className="fill-slate-900 stroke-indigo-500/30" />
-              <circle cx={660} cy={85} r={2.5} className="fill-slate-900 stroke-indigo-500/30" />
-            </g>
-
-            {/* Planter Palms botanical greenery outlines */}
-            <g className="fill-emerald-500/10 stroke-emerald-500/35" strokeWidth={0.8}>
-              {/* Leafy plant pot 1 */}
-              <circle cx={130} cy={200} r={4.5} className="fill-slate-900" />
-              <path d="M 130 200 Q 120 190 114 195 Q 123 203 130 200 Z" />
-              <path d="M 130 200 Q 140 190 146 195 Q 137 203 130 200 Z" />
-              <path d="M 130 200 Q 130 185 133 182 Q 137 195 130 200 Z" />
-              
-              {/* Leafy plant pot 2 */}
-              <circle cx={410} cy={200} r={4.5} className="fill-slate-900" />
-              <path d="M 410 200 Q 400 190 394 195 Q 403 203 410 200 Z" />
-              <path d="M 410 200 Q 420 190 426 195 Q 417 203 410 200 Z" />
-
-              {/* Plant Pot 3 Near elevator */}
-              <circle cx={585} cy={165} r={4} className="fill-slate-900" />
-              <path d="M 585 165 C 580 155 572 158 576 150 C 585 160 585 165 585 165 Z" />
-            </g>
-
-            {/* Interactive Workspace Rooms */}
+            {/* Interactive Workspace Glassmorphic Hotspots */}
             {filteredRooms.map((room) => {
               const colors = statusColors[room.status];
               const isHovered = hoveredRoom === room.id;
@@ -629,69 +370,51 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                     }
                   }}
                 >
-                  {/* Glass Acoustic Partition (Structural Wall Outline) */}
-                  <rect
-                    x={room.x - 2}
-                    y={room.y - 2}
-                    width={room.w + 4}
-                    height={room.h + 4}
-                    rx={10}
-                    className={cn(
-                      "fill-none stroke-indigo-500/10 transition-all duration-300",
-                      isHovered && "stroke-primary/30"
-                    )}
-                    strokeWidth={isHovered ? 2.5 : 1}
-                  />
-
-                  {/* Room Inner Floor Area */}
+                  {/* Glass Acoustic Partition (Hotspot fill layer) */}
                   <rect
                     x={room.x}
                     y={room.y}
                     width={room.w}
                     height={room.h}
-                    rx={8}
-                    fill={colors.gradient}
-                    className={cn(colors.stroke, "transition-all duration-300")}
-                    strokeWidth={isHovered ? 2.8 : 1.6}
-                    filter={isHovered ? "url(#neon-glow)" : undefined}
+                    rx={12}
+                    fill={isHovered ? "rgba(99, 102, 241, 0.08)" : colors.fill}
+                    className={cn(colors.stroke, "transition-all duration-200 fill-none stroke-none")}
+                    strokeWidth={isHovered ? 2.5 : 1}
                   />
 
-                  {/* Render desks/swivel chairs/screens interior detail */}
-                  {renderFurniture(room)}
-
-                  {/* Realistic Swinging Architectural Doors with sweep lines */}
-                  <g className="stroke-indigo-400/40 fill-none" strokeWidth={0.8}>
-                    {/* Door Hinge Anchor */}
-                    <line x1={room.x} y1={room.y + room.h - 10} x2={room.x} y2={room.y + room.h} />
-                    {/* Swing arc representation */}
-                    <path d={`M ${room.x} ${room.y + room.h - 10} A 10 10 0 0 1 ${room.x + 10} ${room.y + room.h}`} strokeDasharray="1.5 1.5" />
-                    {/* Open Door frame panel */}
-                    <line x1={room.x} y1={room.y + room.h} x2={room.x + 8} y2={room.y + room.h - 6} className={colors.stroke} strokeWidth={1} />
-                  </g>
-
-                  {/* Dimension Strings (Blueprint-style dimensions in small caps) */}
-                  <g className="fill-indigo-400/40 text-[5px] font-mono tracking-tighter" pointerEvents="none">
-                    <text x={room.x + room.w / 2} y={room.y + 10} textAnchor="middle">
-                      {(room.w * 0.1).toFixed(1)}m × {(room.h * 0.1).toFixed(1)}m
-                    </text>
-                  </g>
+                  {/* Glass Glowing Overlay borders */}
+                  <rect
+                    x={room.x}
+                    y={room.y}
+                    width={room.w}
+                    height={room.h}
+                    rx={12}
+                    fill="rgba(255, 255, 255, 0.01)"
+                    stroke={isHovered ? "#818cf8" : "rgba(255,255,255,0.15)"}
+                    strokeWidth={isHovered ? 3 : 1.5}
+                    className="transition-all duration-200"
+                    filter={isHovered ? "url(#neon-glow)" : undefined}
+                    style={{
+                      backdropFilter: isHovered ? "blur(3px)" : "none"
+                    }}
+                  />
 
                   {/* High-Contrast Bold Room Name text */}
                   <text
                     x={room.x + room.w / 2}
-                    y={room.y + room.h / 2 - 12}
+                    y={room.y + room.h / 2 - 8}
                     textAnchor="middle"
-                    className="fill-white text-[9px] font-black uppercase tracking-wider select-none pointer-events-none"
+                    className="fill-white text-[10px] font-black uppercase tracking-wider select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                   >
                     {room.name}
                   </text>
 
-                  {/* Subtitle Room Code RM 1A1 etc. */}
+                  {/* Room Number text */}
                   <text
                     x={room.x + room.w / 2}
-                    y={room.y + room.h / 2 - 1}
+                    y={room.y + room.h / 2 + 3}
                     textAnchor="middle"
-                    className="fill-indigo-300/80 text-[7px] font-black tracking-widest uppercase select-none pointer-events-none"
+                    className="fill-indigo-300 text-[8px] font-black tracking-widest uppercase select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                   >
                     {roomNumberText}
                   </text>
@@ -699,74 +422,34 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                   {/* Capacity & Live availability status line */}
                   <text
                     x={room.x + room.w / 2}
-                    y={room.y + room.h / 2 + 10}
+                    y={room.y + room.h / 2 + 13}
                     textAnchor="middle"
-                    className="fill-indigo-200/60 text-[6.5px] font-semibold tracking-wide select-none pointer-events-none"
+                    className="fill-indigo-200/90 text-[7px] font-black tracking-wide select-none pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                   >
-                    Cap: {room.capacity} · {colors.label}
+                    CAP: {room.capacity}
                   </text>
 
                   {/* Pulsing Active Status Beacon indicators */}
                   {room.status === "available" && (
-                    <g>
-                      <circle cx={room.x + room.w - 10} cy={room.y + 10} r={5} className="fill-emerald-400/20 pulsing-beacon" />
-                      <circle cx={room.x + room.w - 10} cy={room.y + 10} r={2.5} className="fill-emerald-400" />
+                    <g transform={`translate(${room.x + room.w - 14}, ${room.y + 14})`}>
+                      <circle cx={0} cy={0} r={5} className="fill-emerald-400/20 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
+                      <circle cx={0} cy={0} r={2.5} className="fill-emerald-400" />
                     </g>
                   )}
                   {room.status === "almost-full" && (
-                    <g>
-                      <circle cx={room.x + room.w - 10} cy={room.y + 10} r={5} className="fill-amber-400/20 pulsing-beacon" />
-                      <circle cx={room.x + room.w - 10} cy={room.y + 10} r={2.5} className="fill-amber-400" />
+                    <g transform={`translate(${room.x + room.w - 14}, ${room.y + 14})`}>
+                      <circle cx={0} cy={0} r={5} className="fill-amber-400/20 pulsing-beacon" style={{ transformOrigin: "0px 0px" }} />
+                      <circle cx={0} cy={0} r={2.5} className="fill-amber-400" />
                     </g>
                   )}
                   {room.status === "booked" && (
-                    <g>
-                      <circle cx={room.x + room.w - 10} cy={room.y + 10} r={2.5} className="fill-red-400" />
+                    <g transform={`translate(${room.x + room.w - 14}, ${room.y + 14})`}>
+                      <circle cx={0} cy={0} r={2.5} className="fill-red-400" />
                     </g>
                   )}
                 </g>
               );
             })}
-
-            {/* Glowing Blueprint Compass Rose (North Arrow) */}
-            <g className="stroke-indigo-500/40 fill-none compass-needle cursor-pointer" strokeWidth={0.8}>
-              <circle cx={690} cy={75} r={14} className="fill-indigo-950/20 stroke-indigo-500/20" />
-              <line x1={690} y1={55} x2={690} y2={95} strokeDasharray="1 1" />
-              <line x1={670} y1={75} x2={710} y2={75} strokeDasharray="1 1" />
-              {/* Compass Pointer */}
-              <polygon points="690,57 686,75 694,75" className="fill-indigo-400 stroke-none" />
-              <polygon points="690,93 687,75 693,75" className="fill-indigo-950 stroke-indigo-500/40" />
-              <text x={690} y={50} textAnchor="middle" className="fill-indigo-400 text-[8px] font-black">N</text>
-            </g>
-
-            {/* Metric Scale Ruler bar */}
-            <g className="stroke-indigo-500/40 fill-none" strokeWidth={0.8}>
-              <line x1={20} y1={392} x2={100} y2={392} />
-              <line x1={20} y1={389} x2={20} y2={395} />
-              <line x1={60} y1={389} x2={60} y2={395} />
-              <line x1={100} y1={389} x2={100} y2={395} />
-              <text x={20} y={383} className="fill-indigo-400/80 text-[5px] font-black" textAnchor="middle">0m</text>
-              <text x={60} y={383} className="fill-indigo-400/80 text-[5px] font-black" textAnchor="middle">5m</text>
-              <text x={100} y={383} className="fill-indigo-400/80 text-[5px] font-black" textAnchor="middle">10m</text>
-            </g>
-
-            {/* Glowing Safety Indicators (WiFi routers, Exits) */}
-            <g className="fill-none stroke-indigo-500/20" strokeWidth={0.6}>
-              {/* WiFi beacon 1 */}
-              <circle cx={250} cy={140} r={8} strokeDasharray="2 2" className="stroke-primary/20 animate-pulse" />
-              <circle cx={250} cy={140} r={1.5} className="fill-primary stroke-none" />
-              {/* WiFi beacon 2 */}
-              <circle cx={500} cy={270} r={8} strokeDasharray="2 2" className="stroke-primary/20 animate-pulse" />
-              <circle cx={500} cy={270} r={1.5} className="fill-primary stroke-none" />
-              
-              {/* Fire Extinguisher positions */}
-              <g transform="translate(136, 134)" className="stroke-none fill-destructive">
-                <rect x={0} y={-3} width={3} height={6} rx={0.5} />
-                <rect x={-0.5} y={-4.5} width={4} height={1.5} />
-                <circle cx={0.5} cy={-2} r={3} className="fill-none stroke-destructive" strokeWidth={0.5} />
-              </g>
-              <text x={143} y={136} className="fill-destructive text-[5px] font-bold uppercase tracking-wider select-none pointer-events-none">🧯 FE</text>
-            </g>
 
           </g>
         </svg>
@@ -800,7 +483,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                           <Badge variant="outline" className="text-[8px] tracking-wider uppercase font-black bg-indigo-500/10 text-indigo-300 border-indigo-500/25 px-1.5 py-0.25">
                             {roomNumberText}
                           </Badge>
-                          <Badge variant={room.status === "available" ? "default" : "destructive"} className="text-[9px] px-1.5 py-0.25">
+                          <Badge variant={room.status === "available" ? "default" : "destructive"} className="text-[9px] px-1.5 py-0.25 border-none">
                             {colors.label}
                           </Badge>
                         </div>
@@ -913,18 +596,10 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         <span className="font-bold text-foreground mr-1 uppercase tracking-wider text-[10px]">Legend:</span>
         {Object.entries(statusColors).map(([key, val]) => (
           <div key={key} className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
-            <span className={cn("h-2.5 w-2.5 rounded-full", val.dot, key !== "booked" && "animate-pulse")} />
+            <span className={cn("h-2.5 w-2.5 rounded-full", val.dot, key !== "booked" && "pulsing-beacon")} />
             <span className="text-foreground/80">{val.label}</span>
           </div>
         ))}
-        <div className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
-          <span className="h-2 w-2 bg-indigo-500/40 rounded-full" />
-          <span className="text-foreground/80">Swivel Chairs</span>
-        </div>
-        <div className="flex items-center gap-2 bg-background/50 border rounded-xl px-2.5 py-1 font-semibold">
-          <span className="text-emerald-500 text-[10px]">🪴</span>
-          <span className="text-foreground/80">Planters</span>
-        </div>
       </div>
     </div>
   );
