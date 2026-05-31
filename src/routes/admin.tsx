@@ -253,6 +253,8 @@ function AdminPage() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    onWheel={(e) => e.stopPropagation()}
+                    style={{ overscrollBehavior: 'contain' }}
                     className="absolute right-0 mt-2 w-80 rounded-2xl border border-border/50 bg-card p-4 shadow-2xl backdrop-blur-xl z-50 flex flex-col max-h-[400px] overflow-hidden"
                   >
                     <div className="mb-3 flex items-center justify-between border-b pb-2 shrink-0">
@@ -267,7 +269,11 @@ function AdminPage() {
                         <p className="text-xs">No pending requests.</p>
                       </div>
                     ) : (
-                      <div className="overflow-y-auto pr-1.5 space-y-3 max-h-[300px]">
+                      <div 
+                        onWheel={(e) => e.stopPropagation()}
+                        style={{ overscrollBehavior: 'contain' }}
+                        className="overflow-y-auto pr-1.5 space-y-3 max-h-[300px]"
+                      >
                         {upcomingBookings.map(b => (
                           <div key={b._id} className="rounded-xl border bg-background/50 hover:bg-background/80 p-3 text-sm transition-colors duration-200 border-border/60">
                             <div className="flex justify-between items-start mb-1.5">
