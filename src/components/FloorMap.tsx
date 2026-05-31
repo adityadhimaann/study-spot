@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API_URL } from "@/lib/api-config";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Users, Volume2, Wifi, Trash2 } from "lucide-react";
+import { Users, Volume2, Wifi, Trash2, ZoomIn, ZoomOut, Maximize2, Minimize2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -149,6 +149,104 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
   const [liveRooms, setLiveRooms] = useState<Room[]>([]);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   
+  // Interactive Viewport Navigation States
+  const [viewport, setViewport] = useState({ scale: 1, x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+  const [dragged, setDragged] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  // Custom non-passive mouse wheel zoom relative to cursor position in SVG coordinates
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Convert mouse coordinates to static SVG viewBox coordinates (860x640)
+      const svgX = (mouseX / rect.width) * 860;
+      const svgY = (mouseY / rect.height) * 640;
+
+      const zoomFactor = 1.15;
+      let factor = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+
+      if (e.ctrlKey) {
+        // High-fidelity Trackpad/Pinch zoom scaling adjustment
+        factor = 1 - e.deltaY * 0.01;
+      }
+
+      setViewport((prev) => {
+        const newScale = Math.min(Math.max(prev.scale * factor, 0.4), 6);
+        const localX = (svgX - prev.x) / prev.scale;
+        const localY = (svgY - prev.y) / prev.scale;
+        return {
+          scale: newScale,
+          x: svgX - localX * newScale,
+          y: svgY - localY * newScale,
+        };
+      });
+    };
+
+    svg.addEventListener("wheel", handleWheel, { passive: false });
+    return () => svg.removeEventListener("wheel", handleWheel);
+  }, []);
+
+  // Escape key event listener to close fullscreen mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
+
+  const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    // Only permit drag panning with mouse left button or direct touch pointers
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    
+    // Capture pointer inputs across screen boundary
+    e.currentTarget.setPointerCapture(e.pointerId);
+    
+    setIsPanning(true);
+    setStartPan({ x: e.clientX - viewport.x, y: e.clientY - viewport.y });
+    setDragged(false);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!isPanning) return;
+    
+    const newX = e.clientX - startPan.x;
+    const newY = e.clientY - startPan.y;
+    
+    // Compute movement offset to differentiate dragging/panning from clicks
+    const distance = Math.sqrt((newX - viewport.x) ** 2 + (newY - viewport.y) ** 2);
+    if (distance > 3) {
+      setDragged(true);
+    }
+    
+    setViewport((prev) => ({
+      ...prev,
+      x: newX,
+      y: newY,
+    }));
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (isPanning) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+      setIsPanning(false);
+    }
+  };
+
   useEffect(() => {
     fetch(`${API_URL}/api/rooms`)
       .then(res => res.json())
@@ -496,9 +594,95 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl w-full">
+      <div 
+        ref={containerRef}
+        className={cn(
+          "relative overflow-hidden transition-all duration-300 w-full",
+          isFullscreen 
+            ? "fixed inset-0 z-50 h-screen w-screen p-6 rounded-none bg-[#06060c]/98 backdrop-blur-md flex flex-col justify-between" 
+            : "rounded-2xl border border-indigo-500/20 bg-[#06060c] text-white shadow-2xl"
+        )}
+      >
+        {/* Floating HUD Map Control System */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-[#090915]/80 p-1.5 rounded-xl border border-indigo-500/20 backdrop-blur-md shadow-lg">
+          <button
+            onClick={() => {
+              setViewport((prev) => {
+                const newScale = Math.min(prev.scale * 1.3, 6);
+                const svgX = 430;
+                const svgY = 320;
+                const localX = (svgX - prev.x) / prev.scale;
+                const localY = (svgY - prev.y) / prev.scale;
+                return {
+                  scale: newScale,
+                  x: svgX - localX * newScale,
+                  y: svgY - localY * newScale,
+                };
+              });
+            }}
+            className="h-8 w-8 flex items-center justify-center rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/20 hover:border-indigo-400/40 text-cyan-400 hover:text-white transition-all cursor-pointer shadow-md shadow-indigo-950/40"
+            title="Zoom In"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          
+          <button
+            onClick={() => {
+              setViewport((prev) => {
+                const newScale = Math.max(prev.scale / 1.3, 0.4);
+                const svgX = 430;
+                const svgY = 320;
+                const localX = (svgX - prev.x) / prev.scale;
+                const localY = (svgY - prev.y) / prev.scale;
+                return {
+                  scale: newScale,
+                  x: svgX - localX * newScale,
+                  y: svgY - localY * newScale,
+                };
+              });
+            }}
+            className="h-8 w-8 flex items-center justify-center rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/20 hover:border-indigo-400/40 text-cyan-400 hover:text-white transition-all cursor-pointer shadow-md shadow-indigo-950/40"
+            title="Zoom Out"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </button>
+
+          <div className="h-5 w-px bg-indigo-500/20 mx-0.5" />
+
+          <button
+            onClick={() => setViewport({ scale: 1, x: 0, y: 0 })}
+            className="px-2.5 h-8 flex items-center gap-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/20 hover:border-indigo-400/40 text-cyan-400 hover:text-white text-[10px] font-mono font-bold uppercase transition-all cursor-pointer shadow-md shadow-indigo-950/40"
+            title="Reset View"
+          >
+            <RefreshCw className="h-3 w-3" />
+            <span className="hidden sm:inline">Fit Grid</span>
+          </button>
+
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="px-2.5 h-8 flex items-center gap-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/20 hover:border-indigo-400/40 text-cyan-400 hover:text-white text-[10px] font-mono font-bold uppercase transition-all cursor-pointer shadow-md shadow-indigo-950/40"
+            title={isFullscreen ? "Exit Full View" : "Fullscreen Map"}
+          >
+            {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{isFullscreen ? "Exit Full" : "Full View"}</span>
+          </button>
+        </div>
+
         {/* SVG Viewport */}
-        <svg viewBox="0 0 860 640" className="w-full h-auto min-h-[500px] md:min-h-[600px] lg:min-h-[700px] select-none">
+        <svg 
+          ref={svgRef}
+          viewBox="0 0 860 640" 
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className={cn(
+            "w-full select-none cursor-grab active:cursor-grabbing",
+            isFullscreen 
+              ? "flex-1 max-h-[82vh] h-auto w-auto mx-auto object-contain" 
+              : "h-auto min-h-[500px] md:min-h-[600px] lg:min-h-[700px]"
+          )}
+        >
           {/* Custom SVG CSS Animations */}
           <style>{`
             @keyframes walkwayFlow {
@@ -550,6 +734,15 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
+
+          {/* Hardware-Accelerated Dynamic Pan & Zoom Wrapper */}
+          <g 
+            style={{
+              transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})`,
+              transformOrigin: "0 0",
+              transition: isPanning ? "none" : "transform 0.15s cubic-bezier(0.1, 0.8, 0.2, 1)"
+            }}
+          >
 
           {/* Blueprint Grid Lines — Vertical */}
           {Array.from({ length: 43 }).map((_, i) => (
@@ -949,6 +1142,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
                 onMouseEnter={() => !editingRoom && setHoveredRoom(room.id)}
                 onMouseLeave={() => !editingRoom && setHoveredRoom(null)}
                 onClick={() => {
+                  if (dragged) return; // Prevent click triggered selection while dragging/panning
                   if (isAdmin) {
                     setEditingRoom(room);
                   } else {
@@ -1061,6 +1255,7 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
               </g>
             );
           })}
+          </g>
         </svg>
 
         {/* Tooltip Card */}
