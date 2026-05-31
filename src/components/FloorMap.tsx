@@ -28,11 +28,15 @@ const defaultLayouts: Record<string, {x:number, y:number, w:number, h:number}> =
   "Quiet Zone A2": { x: 230, y: 60,  w: 170, h: 110 },
   "Quiet Zone A3": { x: 430, y: 60,  w: 170, h: 110 },
   "Quiet Zone A4": { x: 630, y: 60,  w: 170, h: 110 },
+  "Quiet Zone B4": { x: 30,  y: 60,  w: 170, h: 110 },
+  "Quiet Zone B5": { x: 230, y: 60,  w: 170, h: 110 },
 
   // ── ROW 2 (y ≈ 250) ───────────────────────────────
   "Group Room B1": { x: 30,  y: 250, w: 270, h: 140 },
   "Group Room B2": { x: 330, y: 250, w: 270, h: 140 },
   "Group Room B3": { x: 630, y: 250, w: 170, h: 140 },
+  "Group Room A5": { x: 330, y: 250, w: 270, h: 140 },
+  "Group Room C5": { x: 330, y: 250, w: 270, h: 140 },
 
   // ── ROW 3 (y ≈ 470) ───────────────────────────────
   "Quiet Zone C1": { x: 30,  y: 470, w: 170, h: 110 },
@@ -132,20 +136,27 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
       .then(res => res.json())
       .then(data => {
         if (!Array.isArray(data)) return;
-        const mappedRooms = data.map((r: any) => ({
-          id: r._id,
-          name: r.name,
-          type: r.type,
-          capacity: r.capacity,
-          status: r.status,
-          floor: r.floor,
-          amenities: r.amenities || [],
-          rating: r.rating || 4.5,
-          x: r.x || defaultLayouts[r.name]?.x || 0,
-          y: r.y || defaultLayouts[r.name]?.y || 0,
-          w: r.w || defaultLayouts[r.name]?.w || 150,
-          h: r.h || defaultLayouts[r.name]?.h || 100,
-        }));
+        const mappedRooms = data.map((r: any) => {
+          let normFloor = r.floor || "1st";
+          if (normFloor.toLowerCase().includes("1st")) normFloor = "1st";
+          else if (normFloor.toLowerCase().includes("2nd")) normFloor = "2nd";
+          else if (normFloor.toLowerCase().includes("3rd")) normFloor = "3rd";
+          
+          return {
+            id: r._id,
+            name: r.name,
+            type: r.type,
+            capacity: r.capacity,
+            status: r.status,
+            floor: normFloor,
+            amenities: r.amenities || [],
+            rating: r.rating || 4.5,
+            x: r.x || defaultLayouts[r.name]?.x || 0,
+            y: r.y || defaultLayouts[r.name]?.y || 0,
+            w: r.w || defaultLayouts[r.name]?.w || 150,
+            h: r.h || defaultLayouts[r.name]?.h || 100,
+          };
+        });
         setLiveRooms(mappedRooms);
       })
       .catch(console.error);
@@ -381,6 +392,24 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
 
   const filteredRooms = selectedFloor === "all" ? liveRooms : liveRooms.filter((r) => r.floor === selectedFloor);
 
+  const renderPlanter = (cx: number, cy: number, r: number) => {
+    return (
+      <g key={`planter-${cx}-${cy}`} className="stroke-emerald-500/40 fill-emerald-500/5" strokeWidth={0.75}>
+        {/* Plant Pot */}
+        <circle cx={cx} cy={cy} r={r} />
+        <circle cx={cx} cy={cy} r={r - 2} strokeDasharray="1.5 1" className="stroke-emerald-500/20" />
+        {/* Plant Leaves radiating from center */}
+        <path d={`M ${cx} ${cy} C ${cx - r + 3} ${cy - r + 3}, ${cx - r + 2} ${cy - r + 4}, ${cx} ${cy}`} />
+        <path d={`M ${cx} ${cy} C ${cx + r - 3} ${cy - r + 3}, ${cx + r - 2} ${cy - r + 4}, ${cx} ${cy}`} />
+        <path d={`M ${cx} ${cy} C ${cx - r + 3} ${cy + r - 3}, ${cx - r + 2} ${cy + r - 4}, ${cx} ${cy}`} />
+        <path d={`M ${cx} ${cy} C ${cx + r - 3} ${cy + r - 3}, ${cx + r - 2} ${cy + r - 4}, ${cx} ${cy}`} />
+        <path d={`M ${cx} ${cy} C ${cx - r + 2} ${cy}, ${cx - r} ${cy + 1}, ${cx} ${cy}`} />
+        <path d={`M ${cx} ${cy} C ${cx + r - 2} ${cy}, ${cx + r} ${cy - 1}, ${cx} ${cy}`} />
+        <circle cx={cx} cy={cy} r={1} className="fill-emerald-400 stroke-none" />
+      </g>
+    );
+  };
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex flex-wrap items-center justify-between gap-4 w-full">
@@ -431,20 +460,6 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
             .pulse-glow {
               animation: pulseGlow 2.5s ease-in-out infinite;
             }
-            @keyframes radarSweep {
-              0% { transform: translateX(10px); }
-              100% { transform: translateX(840px); }
-            }
-            .radar-line {
-              animation: radarSweep 7s linear infinite;
-            }
-            @keyframes sweepTrailing {
-              0% { transform: translateX(0px); }
-              100% { transform: translateX(760px); }
-            }
-            .radar-sweep {
-              animation: sweepTrailing 7s linear infinite;
-            }
           `}</style>
 
           {/* Blueprint SVG Gradients & Filters Definitions */}
@@ -460,11 +475,6 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
             <linearGradient id="grad-booked" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ef4444" stopOpacity="0.12" />
               <stop offset="100%" stopColor="#ef4444" stopOpacity="0.01" />
-            </linearGradient>
-            <linearGradient id="grad-radar-sweep" x1="100%" y1="0%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#00f3ff" stopOpacity="0.25" />
-              <stop offset="40%" stopColor="#00f3ff" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#00f3ff" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="grad-compass" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#00f3ff" stopOpacity="0.8" />
@@ -525,42 +535,79 @@ export function FloorMap({ onRoomSelect, isAdmin = false }: { onRoomSelect?: (ro
           <rect x="10" y="10" width="840" height="620" rx="12" className="fill-none stroke-indigo-500/20" strokeWidth={2} />
           <rect x="13" y="13" width="834" height="614" rx="10" className="fill-none stroke-indigo-500/10" strokeWidth={0.6} />
 
-          {/* ═══ CYBER RADAR LASER SCANNING SWEEP ═══ */}
-          <g className="pointer-events-none">
-            {/* Trailing Laser Glow */}
-            <rect x={10} y={10} width={80} height={620} fill="url(#grad-radar-sweep)" className="radar-sweep" />
-            {/* Scanning Laser Beam */}
-            <rect x={10} y={10} width={2} height={620} fill="#00f3ff" className="radar-line" filter="url(#glow-cyan)" opacity={0.7} />
+          {/* Architectural Perimeter Window Glazing Panels */}
+          <g className="stroke-cyan-500/35 fill-cyan-500/5" strokeWidth={0.8}>
+            {/* Top wall windows */}
+            <rect x={140} y={9} width={60} height={3} />
+            <rect x={240} y={9} width={60} height={3} />
+            <rect x={440} y={9} width={60} height={3} />
+            <rect x={640} y={9} width={60} height={3} />
+            
+            {/* Bottom wall windows */}
+            <rect x={140} y={628} width={60} height={3} />
+            <rect x={240} y={628} width={60} height={3} />
+            <rect x={550} y={628} width={60} height={3} />
+            <rect x={640} y={628} width={60} height={3} />
           </g>
 
-          {/* ═══ HALLWAY WALKWAYS (Flowing cyber vector tracks) ═══ */}
-          <g className="stroke-indigo-400/20 fill-none animated-walkway" strokeWidth={1}>
-            {/* Horizontal corridors */}
+          {/* Structural Square Concrete Support Pillars (Columns) with internal diagonal cross bracing */}
+          <g className="fill-indigo-950 stroke-indigo-500/40" strokeWidth={0.8}>
+            {[
+              {x: 210, y: 14},
+              {x: 210, y: 190},
+              {x: 210, y: 415},
+              {x: 410, y: 190},
+              {x: 410, y: 415},
+              {x: 610, y: 190},
+              {x: 610, y: 415},
+              {x: 610, y: 14},
+            ].map((p, idx) => (
+              <g key={`col-${idx}`}>
+                <rect x={p.x} y={p.y} width={10} height={10} rx={0.5} />
+                <line x1={p.x} y1={p.y} x2={p.x + 10} y2={p.y + 10} strokeWidth={0.4} className="stroke-indigo-500/20" />
+                <line x1={p.x + 10} y1={p.y} x2={p.x} y2={p.y + 10} strokeWidth={0.4} className="stroke-indigo-500/20" />
+              </g>
+            ))}
+          </g>
+
+          {/* ═══ HALLWAY WALKWAYS (Architectural Corridor Boundaries) ═══ */}
+          <g className="stroke-indigo-500/15 fill-none" strokeWidth={0.8}>
+            {/* Horizontal corridor borders */}
+            <line x1={20} y1={185} x2={840} y2={185} />
+            <line x1={20} y1={205} x2={840} y2={205} />
+            
+            <line x1={20} y1={410} x2={840} y2={410} />
+            <line x1={20} y1={430} x2={840} y2={430} />
+            
+            {/* Vertical corridor borders */}
+            <line x1={205} y1={20} x2={205} y2={620} />
+            <line x1={225} y1={20} x2={225} y2={620} />
+            
+            <line x1={405} y1={20} x2={405} y2={620} />
+            <line x1={425} y1={20} x2={425} y2={620} />
+            
+            <line x1={605} y1={20} x2={605} y2={620} />
+            <line x1={625} y1={20} x2={625} y2={620} />
+          </g>
+          {/* Corridor centerlines */}
+          <g className="stroke-indigo-400/20 fill-none" strokeWidth={0.6} strokeDasharray="3 3">
             <line x1={20} y1={195} x2={840} y2={195} />
             <line x1={20} y1={420} x2={840} y2={420} />
-            {/* Vertical corridors */}
             <line x1={215} y1={20} x2={215} y2={620} />
             <line x1={415} y1={20} x2={415} y2={620} />
             <line x1={615} y1={20} x2={615} y2={620} />
           </g>
 
-          {/* ═══ ECO PLANTER DIVIDERS (Biophilic Indoor zones) ═══ */}
+          {/* ═══ ECO PLANTER DIVIDERS (Detailed biophilic potted plants) ═══ */}
           <g>
-            {/* Main corridor intersections */}
+            {/* Corridor intersections and walkway spacing */}
             {[
-              {cx: 215, cy: 195, r: 8},
-              {cx: 615, cy: 195, r: 8},
-              {cx: 415, cy: 420, r: 8},
-            ].map((p, idx) => (
-              <g key={`pdiv-${idx}`} className="stroke-emerald-500/30 fill-none" strokeWidth={0.8}>
-                <circle cx={p.cx} cy={p.cy} r={p.r} className="fill-emerald-500/[0.04]" />
-                <circle cx={p.cx} cy={p.cy} r={p.r - 3.5} className="stroke-emerald-400/30" strokeDasharray="1.5 1" />
-                <circle cx={p.cx} cy={p.cy} r={1.5} className="fill-emerald-400/70 stroke-none" />
-                {/* Organic leaf stems */}
-                <path d={`M ${p.cx} ${p.cy - p.r + 2.5} Q ${p.cx} ${p.cy} ${p.cx} ${p.cy + p.r - 2.5}`} className="stroke-emerald-400/30" />
-                <path d={`M ${p.cx - p.r + 2.5} ${p.cy} Q ${p.cx} ${p.cy} ${p.cx + p.r - 2.5} ${p.cy}`} className="stroke-emerald-400/30" />
-              </g>
-            ))}
+              {cx: 215, cy: 150, r: 7},
+              {cx: 615, cy: 150, r: 7},
+              {cx: 415, cy: 300, r: 7},
+              {cx: 415, cy: 500, r: 7},
+              {cx: 215, cy: 500, r: 7},
+            ].map((p) => renderPlanter(p.cx, p.cy, p.r))}
           </g>
 
           {/* ═══ RESTROOMS (Highly detailed stalls, toilets, division wall) ═══ */}
