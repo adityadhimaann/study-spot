@@ -10,7 +10,8 @@ import {
   Trash2, Plus, VolumeX, ListTodo, Trophy, Hourglass, 
   Clock, Flame, Users, Globe, MapPin, UserPlus, 
   PlusCircle, Check, Award, Lock, Zap, BookOpen,
-  MessageSquare, Send, Paperclip, Image as ImageIcon, Crown, X, Download, ExternalLink
+  MessageSquare, Send, Paperclip, Image as ImageIcon, Crown, X, Download, ExternalLink,
+  Music, CloudRain, Coffee, Trees, Waves, GraduationCap, Brain, Palmtree, Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -49,12 +50,12 @@ interface StudyGroup {
 }
 
 const audioTracks: AudioTrack[] = [
-  { id: "lofi", name: "Chill Lofi Beats", emoji: "🎹", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", color: "from-purple-500/20 to-purple-600/5" },
-  { id: "rain", name: "Cozy Rain", emoji: "🌧️", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", color: "from-blue-500/20 to-blue-600/5" },
-  { id: "cafe", name: "Bustling Cafe", emoji: "☕", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", color: "from-amber-500/20 to-amber-600/5" },
-  { id: "forest", name: "Whispering Forest", emoji: "🍃", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", color: "from-emerald-500/20 to-emerald-600/5" },
-  { id: "fire", name: "Crackling Fireplace", emoji: "🔥", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", color: "from-rose-500/20 to-rose-600/5" },
-  { id: "waves", name: "Ocean Waves", emoji: "🌊", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", color: "from-cyan-500/20 to-cyan-600/5" },
+  { id: "lofi", name: "Chill Lofi Beats", icon: Music, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", color: "from-purple-500/20 to-purple-600/5" },
+  { id: "rain", name: "Cozy Rain", icon: CloudRain, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", color: "from-blue-500/20 to-blue-600/5" },
+  { id: "cafe", name: "Bustling Cafe", icon: Coffee, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", color: "from-amber-500/20 to-amber-600/5" },
+  { id: "forest", name: "Whispering Forest", icon: Trees, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", color: "from-emerald-500/20 to-emerald-600/5" },
+  { id: "fire", name: "Crackling Fireplace", icon: Flame, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", color: "from-rose-500/20 to-rose-600/5" },
+  { id: "waves", name: "Ocean Waves", icon: Waves, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", color: "from-cyan-500/20 to-cyan-600/5" },
 ];
 
 function StudyHubPage() {
@@ -735,11 +736,11 @@ function StudyHubPage() {
 
   // Compute stats for achievement badges
   const achievements = [
-    { id: "a1", name: "Novice Scholar", desc: "Complete 1 full focus session cycle.", icon: "🎓", progress: Math.min(completedCycles / 1 * 100, 100), unlocked: completedCycles >= 1, label: `${Math.min(completedCycles, 1)} / 1` },
-    { id: "a2", name: "Focus Engine", desc: "Complete 4 full study session cycles.", icon: "⚡", progress: Math.min(completedCycles / 4 * 100, 100), unlocked: completedCycles >= 4, label: `${Math.min(completedCycles, 4)} / 4` },
-    { id: "a3", name: "Deep Work Master", desc: "Log 120 total focus minutes.", icon: "🔥", progress: Math.min(totalFocusedMinutes / 120 * 100, 100), unlocked: totalFocusedMinutes >= 120, label: `${Math.min(totalFocusedMinutes, 120)} / 120 min` },
-    { id: "a4", name: "Flow State Sage", desc: "Complete 8 full study session cycles.", icon: "🧠", progress: Math.min(completedCycles / 8 * 100, 100), unlocked: completedCycles >= 8, label: `${Math.min(completedCycles, 8)} / 8` },
-    { id: "a5", name: "Perfect Balance", desc: "Unlock by logging at least 2 completed study sessions.", icon: "🌴", progress: Math.min(completedCycles / 2 * 100, 100), unlocked: completedCycles >= 2, label: `${Math.min(completedCycles, 2)} / 2` },
+    { id: "a1", name: "Novice Scholar", desc: "Complete 1 full focus session cycle.", icon: GraduationCap, progress: Math.min(completedCycles / 1 * 100, 100), unlocked: completedCycles >= 1, label: `${Math.min(completedCycles, 1)} / 1`, color: "text-blue-400" },
+    { id: "a2", name: "Focus Engine", desc: "Complete 4 full study session cycles.", icon: Zap, progress: Math.min(completedCycles / 4 * 100, 100), unlocked: completedCycles >= 4, label: `${Math.min(completedCycles, 4)} / 4`, color: "text-amber-400" },
+    { id: "a3", name: "Deep Work Master", desc: "Log 120 total focus minutes.", icon: Flame, progress: Math.min(totalFocusedMinutes / 120 * 100, 100), unlocked: totalFocusedMinutes >= 120, label: `${Math.min(totalFocusedMinutes, 120)} / 120 min`, color: "text-rose-400" },
+    { id: "a4", name: "Flow State Sage", desc: "Complete 8 full study session cycles.", icon: Brain, progress: Math.min(completedCycles / 8 * 100, 100), unlocked: completedCycles >= 8, label: `${Math.min(completedCycles, 8)} / 8`, color: "text-purple-400" },
+    { id: "a5", name: "Perfect Balance", desc: "Unlock by logging at least 2 completed study sessions.", icon: Palmtree, progress: Math.min(completedCycles / 2 * 100, 100), unlocked: completedCycles >= 2, label: `${Math.min(completedCycles, 2)} / 2`, color: "text-emerald-400" },
   ];
 
   return (
@@ -929,7 +930,7 @@ function StudyHubPage() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="text-lg">{track.emoji}</span>
+                                <track.icon className="h-5 w-5 text-primary shrink-0" />
                                 <span className="text-xs font-bold text-foreground">{track.name}</span>
                               </div>
                               <button
@@ -1145,12 +1146,12 @@ function StudyHubPage() {
                     </div>
 
                     <Button type="submit" disabled={isPublishing} className="w-full rounded-xl font-bold text-xs py-5 shadow-lg shadow-primary/10">
-                      {isPublishing ? "Hosting..." : "📢 Host Study Session"}
+                      {isPublishing ? "Hosting..." : <span className="flex items-center justify-center gap-1.5"><Globe className="h-4 w-4 shrink-0" /> Host Study Session</span>}
                     </Button>
                   </form>
 
                   <div className="rounded-2xl bg-white/5 border border-white/5 p-3.5 text-[10px] text-muted-foreground leading-relaxed">
-                    <p className="font-bold text-indigo-400 mb-1 flex items-center gap-1">📣 Group Guidelines</p>
+                    <p className="font-bold text-indigo-400 mb-1 flex items-center gap-1.5"><Info className="h-4 w-4 text-indigo-400 shrink-0" /> Group Guidelines</p>
                     Once published, students browsing the board can sign up to join your space. Respect library volume bounds.
                   </div>
                 </CardContent>
@@ -1382,7 +1383,12 @@ function StudyHubPage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-3xl select-none">{ach.icon}</span>
+                          <div className={cn(
+                            "h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0",
+                            ach.unlocked ? ach.color : "text-slate-500"
+                          )}>
+                            <ach.icon className="h-5 w-5" />
+                          </div>
                           <div>
                             <h4 className="text-xs font-black text-foreground">{ach.name}</h4>
                             <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{ach.desc}</p>
@@ -1642,7 +1648,13 @@ function StudyHubPage() {
               {selectedFile && (
                 <div className="p-2 px-4 border-t border-white/10 bg-slate-950/80 flex items-center justify-between text-xs text-slate-200">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-base">{selectedFile.type.startsWith("image/") ? "📷" : "📎"}</span>
+                    <span className="flex items-center shrink-0">
+                      {selectedFile.type.startsWith("image/") ? (
+                        <ImageIcon className="h-4 w-4 text-primary shrink-0" />
+                      ) : (
+                        <Paperclip className="h-4 w-4 text-primary shrink-0" />
+                      )}
+                    </span>
                     <p className="font-bold truncate max-w-[280px]">{selectedFile.name}</p>
                     <span className="text-[10px] text-slate-400 font-mono">({(selectedFile.size / 1024).toFixed(1)} KB)</span>
                   </div>
