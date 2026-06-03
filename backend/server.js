@@ -16,6 +16,8 @@ const allowedOrigins = [
   'http://localhost:5001',
   'https://main.dgxs91r156db5.amplifyapp.com',
   'https://du89a4pg5di5u.cloudfront.net',
+  'https://lpustudyspaces.tech',
+  'https://www.lpustudyspaces.tech'
 ];
 // Also allow any origin set via environment variable
 if (process.env.FRONTEND_URL) {
