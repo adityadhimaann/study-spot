@@ -15,6 +15,17 @@ StudySpace is a full-stack study room and collaboration app built with a Vite + 
 - `public/` - static assets
 - `vercel.json` and `wrangler.jsonc` - deployment configuration
 
+## Deployment
+
+This app has been deployed using AWS services including:
+
+- Amazon CloudFront
+- AWS Amplify
+- AWS Elastic Beanstalk
+- Amazon EC2
+
+If you are updating the deployment setup, keep the frontend and backend environment variables aligned with the target hosting platform.
+
 ## Prerequisites
 
 - Node.js 18 or newer
